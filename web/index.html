@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Анонимизатор психотерапевтических сессий</title>
+    <style>
+        :root {
+            --bg-primary: #fafafa;
+            --bg-secondary: #ffffff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --accent: #4f46e5;
+            --accent-hover: #4338ca;
+            --border: #e5e5e5;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --tag-bg: #eef2ff;
+            --tag-text: #4f46e5;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        header h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .privacy-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--tag-bg);
+            color: var(--tag-text);
+            padding: 0.35rem 0.75rem;
+            border-radius: 2rem;
+            font-size: 0.8rem;
+            margin-top: 0.75rem;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .panel-title {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .panel-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            resize: vertical;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .text-display {
+            width: 100%;
+            min-height: 300px;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            background: var(--bg-primary);
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .btn-small {
+            padding: 0.4rem 0.75rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-icon {
+            padding: 0.5rem;
+            background: transparent;
+            border: 1px solid var(--border);
+        }
+
+        .btn-icon:hover {
+            background: var(--bg-primary);
+        }
+
+        .actions-bar {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .pii-tag {
+            display: inline;
+            background: var(--tag-bg);
+            color: var(--tag-text);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: help;
+        }
+
+        .pii-tag.person { background: #fef3c7; color: #92400e; }
+        .pii-tag.contact { background: #dbeafe; color: #1e40af; }
+        .pii-tag.location { background: #d1fae5; color: #065f46; }
+        .pii-tag.id { background: #fce7f3; color: #9d174d; }
+        .pii-tag.financial { background: #fee2e2; color: #991b1b; }
+        .pii-tag.org { background: #e0e7ff; color: #3730a3; }
+
+        .entity-list {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .entity-list h4 {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+        }
+
+        .entity-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0.75rem;
+            background: var(--bg-primary);
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .entity-item-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .entity-type {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            min-width: 80px;
+        }
+
+        .entity-value {
+            font-weight: 500;
+        }
+
+        .entity-token {
+            color: var(--accent);
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+
+        .entity-remove {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.25rem;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        .entity-remove:hover {
+            opacity: 1;
+            color: var(--danger);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.25rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab {
+            padding: 0.75rem 1rem;
+            background: none;
+            border: none;
+            font-size: 0.875rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .tab:hover:not(.active) {
+            color: var(--text-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .stats {
+            display: flex;
+            gap: 1.5rem;
+            padding: 1rem;
+            background: var(--bg-primary);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip-text {
+            visibility: hidden;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--text-primary);
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .selection-menu {
+            position: fixed;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            display: none;
+        }
+
+        .selection-menu.visible {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            max-width: 300px;
+        }
+
+        .selection-menu button {
+            padding: 0.4rem 0.6rem;
+            font-size: 0.75rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .selection-menu button:hover {
+            filter: brightness(0.9);
+        }
+
+        .selection-menu .cat-person { background: #fef3c7; color: #92400e; }
+        .selection-menu .cat-contact { background: #dbeafe; color: #1e40af; }
+        .selection-menu .cat-location { background: #d1fae5; color: #065f46; }
+        .selection-menu .cat-id { background: #fce7f3; color: #9d174d; }
+        .selection-menu .cat-financial { background: #fee2e2; color: #991b1b; }
+        .selection-menu .cat-org { background: #e0e7ff; color: #3730a3; }
+
+        .help-text {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+        }
+
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal h3 {
+            margin-bottom: 1rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.95rem;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            background: var(--text-primary);
+            color: white;
+            font-size: 0.9rem;
+            z-index: 3000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .notification.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .notification.success {
+            background: var(--success);
+        }
+
+        .notification.error {
+            background: var(--danger);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .settings-section {
+            padding: 1rem;
+            background: var(--bg-primary);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .settings-section h4 {
+            font-size: 0.875rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .checkbox-item input {
+            width: auto;
+        }
+
+        /* API Settings specific */
+        .api-input-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .api-input-group input {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Анонимизатор сессий</h1>
+            <p>Безопасная анонимизация психотерапевтических записей</p>
+            <div class="privacy-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                Все данные обрабатываются локально в вашем браузере
+            </div>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="anonymize">Анонимизация</button>
+            <button class="tab" data-tab="deanonymize">Деанонимизация</button>
+            <button class="tab" data-tab="settings">Настройки</button>
+        </div>
+
+        <!-- Anonymization Tab -->
+        <div id="tab-anonymize" class="tab-content active">
+            <div class="main-layout">
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Исходный текст</span>
+                        <div class="panel-actions">
+                            <button class="btn btn-secondary btn-small" id="loadSampleBtn">Пример</button>
+                            <button class="btn btn-secondary btn-small" id="clearInputBtn">Очистить</button>
+                        </div>
+                    </div>
+                    <textarea id="inputText" placeholder="Вставьте текст психотерапевтической сессии...&#10;&#10;Выделите текст мышкой, чтобы вручную отметить персональные данные, или нажмите 'Автоопределение' для автоматического поиска."></textarea>
+                    <div class="actions-bar">
+                        <button class="btn btn-primary" id="autoDetectBtn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"/>
+                                <path d="m21 21-4.35-4.35"/>
+                            </svg>
+                            Автоопределение
+                        </button>
+                        <button class="btn btn-primary" id="anonymizeBtn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            </svg>
+                            Анонимизировать
+                        </button>
+                    </div>
+                    <p class="help-text">Совет: выделите текст и выберите тип данных для ручной разметки</p>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Анонимизированный текст</span>
+                        <div class="panel-actions">
+                            <button class="btn btn-secondary btn-small" id="copyResultBtn">Копировать</button>
+                            <button class="btn btn-secondary btn-small" id="downloadResultBtn">Скачать</button>
+                        </div>
+                    </div>
+                    <div class="text-display" id="outputText">
+                        <div class="empty-state">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <p>Результат анонимизации появится здесь</p>
+                        </div>
+                    </div>
+
+                    <div class="entity-list" id="entityList" style="display: none;">
+                        <h4>Найденные персональные данные (<span id="entityCount">0</span>)</h4>
+                        <div id="entityItems"></div>
+                        <div class="actions-bar" style="margin-top: 0.75rem;">
+                            <button class="btn btn-secondary btn-small" id="exportMapBtn">Экспорт маппинга</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deanonymization Tab -->
+        <div id="tab-deanonymize" class="tab-content">
+            <div class="main-layout">
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Анонимизированный текст (от LLM)</span>
+                        <div class="panel-actions">
+                            <button class="btn btn-secondary btn-small" id="importMapBtn">Импорт маппинга</button>
+                        </div>
+                    </div>
+                    <textarea id="deanonInput" placeholder="Вставьте анонимизированный текст, полученный от LLM или из другого источника..."></textarea>
+                    <div class="actions-bar">
+                        <button class="btn btn-primary" id="deanonymizeBtn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M13.8 12H3"/>
+                            </svg>
+                            Деанонимизировать
+                        </button>
+                    </div>
+                    <p class="help-text">Используется маппинг из последней анонимизации или импортированный файл</p>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Восстановленный текст</span>
+                        <div class="panel-actions">
+                            <button class="btn btn-secondary btn-small" id="copyDeanonBtn">Копировать</button>
+                        </div>
+                    </div>
+                    <div class="text-display" id="deanonOutput">
+                        <div class="empty-state">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <p>Восстановленный текст появится здесь</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="tab-settings" class="tab-content">
+            <div class="panel">
+                <h3 style="margin-bottom: 1rem;">Настройки автоопределения</h3>
+
+                <div class="settings-section">
+                    <h4>Типы данных для автоматического поиска (regex)</h4>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="detect-phone" checked>
+                            Телефоны
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="detect-email" checked>
+                            Email
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="detect-date" checked>
+                            Даты
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="detect-passport" checked>
+                            Паспорт
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="detect-inn" checked>
+                            ИНН
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="detect-snils" checked>
+                            СНИЛС
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="detect-card" checked>
+                            Банк. карты
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="detect-ip" checked>
+                            IP-адреса
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="detect-url" checked>
+                            URL
+                        </label>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h4>API для расширенного распознавания (опционально)</h4>
+                    <p class="help-text" style="margin-bottom: 0.75rem;">
+                        Подключите API Claude или OpenAI для автоматического распознавания имён, адресов и других сложных сущностей.
+                        Ваш API-ключ хранится только в вашем браузере.
+                    </p>
+                    <div class="form-group">
+                        <label>API-провайдер</label>
+                        <select id="apiProvider" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px;">
+                            <option value="none">Не использовать</option>
+                            <option value="anthropic">Anthropic (Claude)</option>
+                            <option value="openai">OpenAI (GPT)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="apiKeyGroup" style="display: none;">
+                        <label>API-ключ</label>
+                        <div class="api-input-group">
+                            <input type="password" id="apiKey" placeholder="sk-...">
+                            <button class="btn btn-secondary" id="saveApiKeyBtn">Сохранить</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h4>Хранение данных</h4>
+                    <p class="help-text" style="margin-bottom: 0.75rem;">
+                        Маппинг сущностей автоматически сохраняется в localStorage вашего браузера.
+                    </p>
+                    <button class="btn btn-secondary" id="clearStorageBtn">Очистить все сохранённые данные</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Selection Menu for manual PII marking -->
+    <div class="selection-menu" id="selectionMenu">
+        <button class="cat-person" data-type="PERSON">Имя</button>
+        <button class="cat-person" data-type="THERAPIST_NAME">Терапевт</button>
+        <button class="cat-contact" data-type="PHONE_NUMBER">Телефон</button>
+        <button class="cat-contact" data-type="EMAIL">Email</button>
+        <button class="cat-location" data-type="ADDRESS">Адрес</button>
+        <button class="cat-location" data-type="CITY">Город</button>
+        <button class="cat-org" data-type="ORGANIZATION">Организация</button>
+        <button class="cat-id" data-type="PASSPORT_NUMBER">Паспорт</button>
+        <button class="cat-financial" data-type="BANK_ACCOUNT">Счёт</button>
+        <button class="cat-person" data-type="AGE">Возраст</button>
+        <button class="cat-person" data-type="DATE_OF_BIRTH">Дата рожд.</button>
+    </div>
+
+    <!-- Import Modal -->
+    <div class="modal-overlay" id="importModal">
+        <div class="modal">
+            <h3>Импорт маппинга сущностей</h3>
+            <div class="form-group">
+                <label>JSON-файл маппинга</label>
+                <textarea id="importMapText" rows="10" placeholder='{"PERSON": ["Иван Петров"], "ORGANIZATION": ["ООО Рога и копыта"]}'></textarea>
+            </div>
+            <p class="help-text">Вставьте JSON-маппинг, экспортированный ранее, или загрузите файл</p>
+            <div style="margin-top: 0.75rem;">
+                <input type="file" id="importMapFile" accept=".json" style="font-size: 0.875rem;">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="cancelImportBtn">Отмена</button>
+                <button class="btn btn-primary" id="confirmImportBtn">Импортировать</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
