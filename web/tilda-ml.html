@@ -224,7 +224,37 @@ const LABEL_MAP = {
     'TIME': 'TIME',
     'MONEY': 'MONEY',
     'GPE': 'LOCATION',
+    'B-PER': 'PERSON',
+    'I-PER': 'PERSON',
+    'B-LOC': 'LOCATION',
+    'I-LOC': 'LOCATION',
+    'B-ORG': 'ORGANIZATION',
+    'I-ORG': 'ORGANIZATION',
 };
+
+// База русских имён
+const RUSSIAN_NAMES = new Set([
+    // Женские
+    'Александра', 'Алёна', 'Алена', 'Алина', 'Алиса', 'Алла', 'Анастасия', 'Настя', 'Анжела',
+    'Анна', 'Аня', 'Валентина', 'Валерия', 'Лера', 'Варвара', 'Варя', 'Василиса', 'Вера',
+    'Вероника', 'Виктория', 'Вика', 'Галина', 'Галя', 'Дарья', 'Даша', 'Диана', 'Евгения',
+    'Екатерина', 'Катя', 'Елена', 'Лена', 'Елизавета', 'Лиза', 'Жанна', 'Злата', 'Зоя', 'Инна',
+    'Ирина', 'Ира', 'Карина', 'Кира', 'Кристина', 'Ксения', 'Ксюша', 'Лариса', 'Лидия', 'Лиля',
+    'Любовь', 'Люба', 'Людмила', 'Люда', 'Маргарита', 'Рита', 'Марина', 'Мария', 'Маша', 'Милана',
+    'Надежда', 'Надя', 'Наталья', 'Наташа', 'Нина', 'Оксана', 'Олеся', 'Ольга', 'Оля', 'Полина',
+    'Поля', 'Раиса', 'Регина', 'Роза', 'Светлана', 'Света', 'Снежана', 'София', 'Софья', 'Соня',
+    'Тамара', 'Татьяна', 'Таня', 'Ульяна', 'Уля', 'Юлия', 'Юля', 'Яна', 'Ярослава',
+    // Мужские
+    'Александр', 'Саша', 'Саня', 'Алексей', 'Лёша', 'Леша', 'Анатолий', 'Толя', 'Андрей', 'Антон',
+    'Аркадий', 'Артём', 'Артем', 'Артур', 'Богдан', 'Борис', 'Боря', 'Вадим', 'Валентин', 'Валерий',
+    'Василий', 'Вася', 'Виктор', 'Витя', 'Виталий', 'Владимир', 'Вова', 'Володя', 'Владислав', 'Влад',
+    'Вячеслав', 'Слава', 'Геннадий', 'Гена', 'Георгий', 'Гоша', 'Глеб', 'Григорий', 'Гриша', 'Даниил',
+    'Данил', 'Даня', 'Денис', 'Дмитрий', 'Дима', 'Евгений', 'Женя', 'Егор', 'Иван', 'Ваня', 'Игорь',
+    'Илья', 'Кирилл', 'Константин', 'Костя', 'Лев', 'Леонид', 'Лёня', 'Максим', 'Макс', 'Марк',
+    'Матвей', 'Михаил', 'Миша', 'Никита', 'Николай', 'Коля', 'Олег', 'Павел', 'Паша', 'Пётр', 'Петр',
+    'Петя', 'Роман', 'Рома', 'Руслан', 'Семён', 'Семен', 'Сергей', 'Серёжа', 'Сережа', 'Станислав',
+    'Стас', 'Степан', 'Тимофей', 'Тима', 'Фёдор', 'Федор', 'Федя', 'Эдуард', 'Юрий', 'Юра', 'Ярослав'
+]);
 
 // Дополнительные regex-паттерны для того, что NER может пропустить
 const EXTRA_PATTERNS = [
@@ -235,6 +265,29 @@ const EXTRA_PATTERNS = [
     { type: 'SNILS', pattern: /\b\d{3}-\d{3}-\d{3}-\d{2}\b/g },
     { type: 'CARD', pattern: /\b\d{4}[\s\-]\d{4}[\s\-]\d{4}[\s\-]\d{4}\b/g },
 ];
+
+// Функция поиска имён из словаря
+function findNamesFromDictionary(text) {
+    const entities = [];
+    // Ищем слова с заглавной буквы
+    const wordPattern = /[А-ЯЁ][а-яё]+/g;
+    let m;
+    while ((m = wordPattern.exec(text)) !== null) {
+        const word = m[0];
+        // Проверяем, есть ли в словаре (с учётом регистра первой буквы)
+        const normalized = word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+        if (RUSSIAN_NAMES.has(normalized) || RUSSIAN_NAMES.has(word)) {
+            entities.push({
+                text: word,
+                type: 'PERSON',
+                start: m.index,
+                end: m.index + word.length,
+                score: 0.9
+            });
+        }
+    }
+    return entities;
+}
 
 let nerPipeline = null;
 
@@ -277,13 +330,25 @@ async function findEntitiesWithNER(text) {
 
     const results = await nerPipeline(text, { aggregation_strategy: 'simple' });
 
-    return results.map(r => ({
-        text: r.word.replace(/^##/, '').trim(),
-        type: LABEL_MAP[r.entity_group] || r.entity_group,
-        start: r.start,
-        end: r.end,
-        score: r.score
-    })).filter(e => e.score > 0.5 && e.text.length > 1);
+    return results.map(r => {
+        // Получаем тип сущности
+        const entityGroup = r.entity_group || r.entity || 'UNKNOWN';
+        const mappedType = LABEL_MAP[entityGroup];
+
+        // Пропускаем если не смогли определить тип
+        if (!mappedType) {
+            console.log('Unknown entity type:', entityGroup, r);
+            return null;
+        }
+
+        return {
+            text: r.word.replace(/^##/, '').trim(),
+            type: mappedType,
+            start: r.start,
+            end: r.end,
+            score: r.score
+        };
+    }).filter(e => e && e.score > 0.5 && e.text.length > 1);
 }
 
 // Найти сущности с помощью regex
@@ -308,9 +373,9 @@ function findEntitiesWithRegex(text) {
 }
 
 // Объединить и убрать пересечения
-function mergeEntities(nerEntities, regexEntities) {
-    const all = [...nerEntities, ...regexEntities];
-    all.sort((a, b) => b.end - b.start - (a.end - a.start)); // Сначала длинные
+function mergeEntities(nerEntities, regexEntities, nameEntities) {
+    const all = [...nerEntities, ...regexEntities, ...nameEntities];
+    all.sort((a, b) => (b.end - b.start) - (a.end - a.start)); // Сначала длинные
 
     const result = [];
     const used = [];
@@ -406,16 +471,20 @@ document.getElementById('anon-btn').onclick = async function() {
 
     try {
         // NER анализ
-        progressBar.style.width = '40%';
+        progressBar.style.width = '30%';
         const nerEntities = await findEntitiesWithNER(input);
 
         // Regex анализ
-        progressBar.style.width = '70%';
+        progressBar.style.width = '50%';
         const regexEntities = findEntitiesWithRegex(input);
+
+        // Поиск имён из словаря
+        progressBar.style.width = '70%';
+        const nameEntities = findNamesFromDictionary(input);
 
         // Объединение
         progressBar.style.width = '90%';
-        const allEntities = mergeEntities(nerEntities, regexEntities);
+        const allEntities = mergeEntities(nerEntities, regexEntities, nameEntities);
 
         if (allEntities.length === 0) {
             error.textContent = 'Персональные данные не найдены.';
