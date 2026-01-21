@@ -1,0 +1,460 @@
+<!-- Анонимизатор с ML для Tilda - вставьте в блок T123 -->
+<div id="anon-app">
+<style>
+#anon-app {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    color: #1a1a1a;
+    line-height: 1.6;
+}
+#anon-app * { box-sizing: border-box; }
+#anon-app h2 {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+#anon-app .subtitle {
+    text-align: center;
+    color: #666;
+    font-size: 0.95rem;
+    margin-bottom: 2rem;
+}
+#anon-app .privacy {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: #eef2ff;
+    color: #4f46e5;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-size: 0.85rem;
+    margin: 0 auto 2rem;
+    width: fit-content;
+}
+#anon-app textarea {
+    width: 100%;
+    min-height: 250px;
+    padding: 1rem;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: 1.7;
+    resize: vertical;
+    margin-bottom: 1rem;
+}
+#anon-app textarea:focus {
+    outline: none;
+    border-color: #4f46e5;
+}
+#anon-app .btn {
+    display: block;
+    width: 100%;
+    padding: 1rem;
+    background: #4f46e5;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+#anon-app .btn:hover { background: #4338ca; }
+#anon-app .btn:disabled {
+    background: #9ca3af;
+    cursor: wait;
+}
+#anon-app .result {
+    margin-top: 2rem;
+    display: none;
+}
+#anon-app .result.visible { display: block; }
+#anon-app .result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+#anon-app .result-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+#anon-app .copy-btn {
+    padding: 0.5rem 1rem;
+    background: #f3f4f6;
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+#anon-app .copy-btn:hover { background: #e5e5e5; }
+#anon-app .output {
+    background: #f9fafb;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    padding: 1rem;
+    min-height: 200px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.7;
+    font-size: 1rem;
+}
+#anon-app .tag {
+    display: inline;
+    background: #fef3c7;
+    color: #92400e;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-weight: 500;
+}
+#anon-app .stats {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f0fdf4;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #166534;
+}
+#anon-app .error {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #fef2f2;
+    border-radius: 8px;
+    color: #dc2626;
+    display: none;
+}
+#anon-app .error.visible { display: block; }
+#anon-app .loading {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #eff6ff;
+    border-radius: 8px;
+    color: #1d4ed8;
+    display: none;
+    text-align: center;
+}
+#anon-app .loading.visible { display: block; }
+#anon-app .progress {
+    width: 100%;
+    height: 6px;
+    background: #dbeafe;
+    border-radius: 3px;
+    margin-top: 0.75rem;
+    overflow: hidden;
+}
+#anon-app .progress-bar {
+    height: 100%;
+    background: #3b82f6;
+    border-radius: 3px;
+    transition: width 0.3s;
+    width: 0%;
+}
+#anon-app .model-status {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    background: #f9fafb;
+    border-radius: 6px;
+}
+#anon-app .model-status.ready {
+    background: #f0fdf4;
+    color: #166534;
+}
+</style>
+
+<h2>Анонимизатор сессий</h2>
+<p class="subtitle">Автоматическая защита персональных данных с помощью AI</p>
+
+<div class="privacy">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    </svg>
+    Данные обрабатываются локально в вашем браузере
+</div>
+
+<div class="model-status" id="model-status">
+    Загрузка AI-модели... (первый раз может занять ~30 сек)
+</div>
+
+<textarea id="anon-input" placeholder="Вставьте текст психотерапевтической сессии..."></textarea>
+
+<button class="btn" id="anon-btn" disabled>Загрузка модели...</button>
+
+<div class="loading" id="anon-loading">
+    <div>Анализируем текст...</div>
+    <div class="progress"><div class="progress-bar" id="progress-bar"></div></div>
+</div>
+
+<div class="error" id="anon-error"></div>
+
+<div class="result" id="anon-result">
+    <div class="result-header">
+        <span class="result-title">Анонимизированный текст</span>
+        <button class="copy-btn" id="anon-copy">Копировать</button>
+    </div>
+    <div class="output" id="anon-output"></div>
+    <div class="stats" id="anon-stats"></div>
+</div>
+</div>
+
+<!-- Transformers.js -->
+<script type="module">
+import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1';
+
+// Отключаем локальные модели, используем только CDN
+env.allowLocalModels = false;
+
+// Маппинг NER-меток на наши типы
+const LABEL_MAP = {
+    'PER': 'PERSON',
+    'PERSON': 'PERSON',
+    'LOC': 'LOCATION',
+    'LOCATION': 'LOCATION',
+    'ORG': 'ORGANIZATION',
+    'ORGANIZATION': 'ORGANIZATION',
+    'MISC': 'OTHER',
+    'DATE': 'DATE',
+    'TIME': 'TIME',
+    'MONEY': 'MONEY',
+    'GPE': 'LOCATION',
+};
+
+// Дополнительные regex-паттерны для того, что NER может пропустить
+const EXTRA_PATTERNS = [
+    { type: 'PHONE', pattern: /(?:\+7|8)[\s\-]?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}/g },
+    { type: 'EMAIL', pattern: /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g },
+    { type: 'DATE', pattern: /\b\d{1,2}[.\/]\d{1,2}[.\/]\d{2,4}\b/g },
+    { type: 'PASSPORT', pattern: /\b\d{2}\s\d{2}\s\d{6}\b/g },
+    { type: 'SNILS', pattern: /\b\d{3}-\d{3}-\d{3}-\d{2}\b/g },
+    { type: 'CARD', pattern: /\b\d{4}[\s\-]\d{4}[\s\-]\d{4}[\s\-]\d{4}\b/g },
+];
+
+let nerPipeline = null;
+
+// Загрузка модели
+async function loadModel() {
+    const statusEl = document.getElementById('model-status');
+    const btnEl = document.getElementById('anon-btn');
+
+    try {
+        statusEl.textContent = 'Загрузка AI-модели... (первый раз ~30 сек, потом из кеша)';
+
+        // Используем мультиязычную NER модель
+        nerPipeline = await pipeline(
+            'token-classification',
+            'Xenova/bert-base-multilingual-cased-ner-hrl',
+            {
+                progress_callback: (progress) => {
+                    if (progress.status === 'downloading') {
+                        const pct = Math.round((progress.loaded / progress.total) * 100);
+                        statusEl.textContent = `Загрузка модели: ${pct}%`;
+                    }
+                }
+            }
+        );
+
+        statusEl.textContent = '✓ Модель загружена и готова к работе';
+        statusEl.classList.add('ready');
+        btnEl.disabled = false;
+        btnEl.textContent = 'Анонимизировать';
+
+    } catch (e) {
+        statusEl.textContent = '✗ Ошибка загрузки модели: ' + e.message;
+        console.error(e);
+    }
+}
+
+// Найти сущности с помощью NER
+async function findEntitiesWithNER(text) {
+    if (!nerPipeline) return [];
+
+    const results = await nerPipeline(text, { aggregation_strategy: 'simple' });
+
+    return results.map(r => ({
+        text: r.word.replace(/^##/, '').trim(),
+        type: LABEL_MAP[r.entity_group] || r.entity_group,
+        start: r.start,
+        end: r.end,
+        score: r.score
+    })).filter(e => e.score > 0.5 && e.text.length > 1);
+}
+
+// Найти сущности с помощью regex
+function findEntitiesWithRegex(text) {
+    const entities = [];
+
+    for (const { type, pattern } of EXTRA_PATTERNS) {
+        const p = new RegExp(pattern.source, pattern.flags);
+        let m;
+        while ((m = p.exec(text)) !== null) {
+            entities.push({
+                text: m[0],
+                type,
+                start: m.index,
+                end: m.index + m[0].length,
+                score: 1.0
+            });
+        }
+    }
+
+    return entities;
+}
+
+// Объединить и убрать пересечения
+function mergeEntities(nerEntities, regexEntities) {
+    const all = [...nerEntities, ...regexEntities];
+    all.sort((a, b) => b.end - b.start - (a.end - a.start)); // Сначала длинные
+
+    const result = [];
+    const used = [];
+
+    for (const entity of all) {
+        const overlaps = used.some(u =>
+            (entity.start < u.end && entity.end > u.start)
+        );
+
+        if (!overlaps) {
+            result.push(entity);
+            used.push({ start: entity.start, end: entity.end });
+        }
+    }
+
+    return result.sort((a, b) => a.start - b.start);
+}
+
+// Анонимизация
+function anonymize(text, entities) {
+    if (!entities.length) return { result: text, count: 0, types: {} };
+
+    const map = {};
+    const types = {};
+    let result = '';
+    let lastEnd = 0;
+
+    for (const e of entities) {
+        result += text.substring(lastEnd, e.start);
+
+        if (!map[e.type]) map[e.type] = [];
+
+        let idx = map[e.type].findIndex(v => v.toLowerCase() === e.text.toLowerCase());
+        if (idx === -1) {
+            map[e.type].push(e.text);
+            idx = map[e.type].length - 1;
+        }
+
+        result += `<${e.type}_${idx + 1}>`;
+        types[e.type] = (types[e.type] || 0) + 1;
+        lastEnd = e.end;
+    }
+
+    result += text.substring(lastEnd);
+    return { result, count: entities.length, types };
+}
+
+// Форматирование
+function formatResult(text) {
+    return text.replace(/<(\w+)_(\d+)>/g, '<span class="tag">&lt;$1_$2&gt;</span>');
+}
+
+function formatStats(types) {
+    const labels = {
+        PERSON: 'Имена',
+        LOCATION: 'Места',
+        ORGANIZATION: 'Организации',
+        PHONE: 'Телефоны',
+        EMAIL: 'Email',
+        DATE: 'Даты',
+        PASSPORT: 'Паспорта',
+        SNILS: 'СНИЛС',
+        CARD: 'Карты',
+        OTHER: 'Другое'
+    };
+    const items = Object.entries(types).map(([k, v]) => `${labels[k] || k}: ${v}`);
+    const total = Object.values(types).reduce((a, b) => a + b, 0);
+    return `Найдено и заменено ${total} элементов (${items.join(', ')})`;
+}
+
+// Обработчик кнопки
+document.getElementById('anon-btn').onclick = async function() {
+    const input = document.getElementById('anon-input').value.trim();
+    const error = document.getElementById('anon-error');
+    const result = document.getElementById('anon-result');
+    const loading = document.getElementById('anon-loading');
+    const progressBar = document.getElementById('progress-bar');
+    const btn = this;
+
+    error.classList.remove('visible');
+    result.classList.remove('visible');
+
+    if (!input) {
+        error.textContent = 'Пожалуйста, вставьте текст сессии';
+        error.classList.add('visible');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Анализируем...';
+    loading.classList.add('visible');
+    progressBar.style.width = '20%';
+
+    try {
+        // NER анализ
+        progressBar.style.width = '40%';
+        const nerEntities = await findEntitiesWithNER(input);
+
+        // Regex анализ
+        progressBar.style.width = '70%';
+        const regexEntities = findEntitiesWithRegex(input);
+
+        // Объединение
+        progressBar.style.width = '90%';
+        const allEntities = mergeEntities(nerEntities, regexEntities);
+
+        if (allEntities.length === 0) {
+            error.textContent = 'Персональные данные не найдены.';
+            error.classList.add('visible');
+            loading.classList.remove('visible');
+            btn.disabled = false;
+            btn.textContent = 'Анонимизировать';
+            return;
+        }
+
+        // Анонимизация
+        const { result: anonymized, types } = anonymize(input, allEntities);
+
+        progressBar.style.width = '100%';
+
+        document.getElementById('anon-output').innerHTML = formatResult(anonymized);
+        document.getElementById('anon-stats').textContent = formatStats(types);
+        result.classList.add('visible');
+
+    } catch (e) {
+        error.textContent = 'Ошибка: ' + e.message;
+        error.classList.add('visible');
+        console.error(e);
+    }
+
+    loading.classList.remove('visible');
+    btn.disabled = false;
+    btn.textContent = 'Анонимизировать';
+};
+
+// Копирование
+document.getElementById('anon-copy').onclick = function() {
+    const text = document.getElementById('anon-output').innerText;
+    navigator.clipboard.writeText(text).then(() => {
+        this.textContent = 'Скопировано!';
+        setTimeout(() => this.textContent = 'Копировать', 2000);
+    });
+};
+
+// Загружаем модель при старте
+loadModel();
+</script>
