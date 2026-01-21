@@ -1,0 +1,344 @@
+<!-- Анонимизатор для Tilda - вставьте в блок T123 -->
+<div id="anon-app">
+<style>
+#anon-app {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    color: #1a1a1a;
+    line-height: 1.6;
+}
+#anon-app * { box-sizing: border-box; }
+#anon-app h2 {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+#anon-app .subtitle {
+    text-align: center;
+    color: #666;
+    font-size: 0.95rem;
+    margin-bottom: 2rem;
+}
+#anon-app .privacy {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: #eef2ff;
+    color: #4f46e5;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-size: 0.85rem;
+    margin: 0 auto 2rem;
+    width: fit-content;
+}
+#anon-app textarea {
+    width: 100%;
+    min-height: 250px;
+    padding: 1rem;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: 1.7;
+    resize: vertical;
+    margin-bottom: 1rem;
+}
+#anon-app textarea:focus {
+    outline: none;
+    border-color: #4f46e5;
+}
+#anon-app .btn {
+    display: block;
+    width: 100%;
+    padding: 1rem;
+    background: #4f46e5;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+#anon-app .btn:hover { background: #4338ca; }
+#anon-app .btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+#anon-app .result {
+    margin-top: 2rem;
+    display: none;
+}
+#anon-app .result.visible { display: block; }
+#anon-app .result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+#anon-app .result-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+#anon-app .copy-btn {
+    padding: 0.5rem 1rem;
+    background: #f3f4f6;
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+#anon-app .copy-btn:hover { background: #e5e5e5; }
+#anon-app .output {
+    background: #f9fafb;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    padding: 1rem;
+    min-height: 200px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.7;
+    font-size: 1rem;
+}
+#anon-app .tag {
+    display: inline;
+    background: #fef3c7;
+    color: #92400e;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-weight: 500;
+}
+#anon-app .stats {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f0fdf4;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #166534;
+}
+#anon-app .error {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #fef2f2;
+    border-radius: 8px;
+    color: #dc2626;
+    display: none;
+}
+#anon-app .error.visible { display: block; }
+</style>
+
+<h2>Анонимизатор сессий</h2>
+<p class="subtitle">Автоматическая защита персональных данных в психотерапевтических записях</p>
+
+<div class="privacy">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    </svg>
+    Данные обрабатываются локально в вашем браузере
+</div>
+
+<textarea id="anon-input" placeholder="Вставьте текст психотерапевтической сессии..."></textarea>
+
+<button class="btn" id="anon-btn">Анонимизировать</button>
+
+<div class="error" id="anon-error"></div>
+
+<div class="result" id="anon-result">
+    <div class="result-header">
+        <span class="result-title">Анонимизированный текст</span>
+        <button class="copy-btn" id="anon-copy">Копировать</button>
+    </div>
+    <div class="output" id="anon-output"></div>
+    <div class="stats" id="anon-stats"></div>
+</div>
+</div>
+
+<script>
+(function() {
+    // Паттерны для распознавания персональных данных
+    const PATTERNS = [
+        // Имена (русские) - Имя Отчество, Имя Фамилия, И.О. Фамилия
+        { type: 'PERSON', patterns: [
+            /\b[А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+(?:ович|евич|ич|овна|евна|ична|инична)\b/g,
+            /\b[А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+(?:ович|евич|ич|овна|евна|ична|инична)\s+[А-ЯЁ][а-яё]+\b/g,
+            /\b[А-ЯЁ]\.[А-ЯЁ]\.\s*[А-ЯЁ][а-яё]+\b/g,
+            /\b[А-ЯЁ]\.\s*[А-ЯЁ]\.\s*[А-ЯЁ][а-яё]+\b/g,
+        ]},
+        // Телефоны
+        { type: 'PHONE', patterns: [
+            /(?:\+7|8)[\s\-]?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}/g,
+            /(?:\+7|8)\d{10}/g,
+        ]},
+        // Email
+        { type: 'EMAIL', patterns: [
+            /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g,
+        ]},
+        // Даты
+        { type: 'DATE', patterns: [
+            /\b\d{1,2}[.\/\-]\d{1,2}[.\/\-]\d{2,4}\b/g,
+            /\b\d{1,2}\s+(?:января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)\s+\d{4}\b/gi,
+            /\b\d{1,2}\s+(?:января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)\b/gi,
+        ]},
+        // Паспорт
+        { type: 'PASSPORT', patterns: [
+            /\b\d{2}\s?\d{2}\s?\d{6}\b/g,
+        ]},
+        // СНИЛС
+        { type: 'SNILS', patterns: [
+            /\b\d{3}[\s\-]?\d{3}[\s\-]?\d{3}[\s\-]?\d{2}\b/g,
+        ]},
+        // ИНН
+        { type: 'INN', patterns: [
+            /\b\d{10,12}\b/g,
+        ]},
+        // Банковские карты
+        { type: 'CARD', patterns: [
+            /\b\d{4}[\s\-]?\d{4}[\s\-]?\d{4}[\s\-]?\d{4}\b/g,
+        ]},
+        // Адреса (улицы)
+        { type: 'ADDRESS', patterns: [
+            /(?:ул\.|улица|пр\.|проспект|пер\.|переулок|б-р|бульвар|ш\.|шоссе|наб\.|набережная)\s*[А-ЯЁа-яё0-9\s\.\-]+,?\s*(?:д\.|дом)?\s*\d+[а-яё]?(?:\s*(?:,|\/)\s*(?:кв\.|квартира|оф\.|офис)\s*\d+)?/gi,
+        ]},
+        // Города
+        { type: 'CITY', patterns: [
+            /\b(?:г\.|город)\s*[А-ЯЁ][а-яё\-]+/gi,
+        ]},
+        // Организации
+        { type: 'ORG', patterns: [
+            /(?:ООО|ОАО|ЗАО|ПАО|АО|ИП)\s*[«"]?[А-ЯЁа-яё\s\-]+[»"]?/g,
+            /(?:компания|фирма|банк|клиника|больница|поликлиника|школа|университет|институт)\s*[«"]?[А-ЯЁ][А-ЯЁа-яё\s\-]*[»"]?/gi,
+        ]},
+        // Возраст
+        { type: 'AGE', patterns: [
+            /\b\d{1,3}\s*(?:лет|года|год)\b/gi,
+            /\b(?:мне|ему|ей|им)\s+\d{1,2}\b/gi,
+        ]},
+    ];
+
+    // Найти все совпадения
+    function findMatches(text) {
+        const matches = [];
+        const used = new Set();
+
+        for (const { type, patterns } of PATTERNS) {
+            for (const pattern of patterns) {
+                pattern.lastIndex = 0;
+                let m;
+                while ((m = pattern.exec(text)) !== null) {
+                    const key = `${m.index}-${m.index + m[0].length}`;
+                    // Проверяем пересечения
+                    let overlaps = false;
+                    for (const u of used) {
+                        const [us, ue] = u.split('-').map(Number);
+                        if ((m.index >= us && m.index < ue) ||
+                            (m.index + m[0].length > us && m.index + m[0].length <= ue) ||
+                            (m.index <= us && m.index + m[0].length >= ue)) {
+                            overlaps = true;
+                            break;
+                        }
+                    }
+                    if (!overlaps && m[0].trim()) {
+                        matches.push({ text: m[0], type, start: m.index, end: m.index + m[0].length });
+                        used.add(key);
+                    }
+                }
+            }
+        }
+
+        return matches.sort((a, b) => a.start - b.start);
+    }
+
+    // Анонимизация
+    function anonymize(text) {
+        const matches = findMatches(text);
+        if (!matches.length) return { result: text, count: 0, types: {} };
+
+        const map = {};
+        const types = {};
+        let result = '';
+        let lastEnd = 0;
+
+        for (const m of matches) {
+            result += text.substring(lastEnd, m.start);
+
+            if (!map[m.type]) map[m.type] = [];
+            let idx = map[m.type].indexOf(m.text);
+            if (idx === -1) {
+                map[m.type].push(m.text);
+                idx = map[m.type].length - 1;
+            }
+
+            result += `<${m.type}_${idx + 1}>`;
+            types[m.type] = (types[m.type] || 0) + 1;
+            lastEnd = m.end;
+        }
+
+        result += text.substring(lastEnd);
+        return { result, count: matches.length, types };
+    }
+
+    // Форматирование с подсветкой
+    function formatResult(text) {
+        return text.replace(/<(\w+)_(\d+)>/g, '<span class="tag">&lt;$1_$2&gt;</span>');
+    }
+
+    // Статистика
+    function formatStats(types) {
+        const labels = {
+            PERSON: 'Имена',
+            PHONE: 'Телефоны',
+            EMAIL: 'Email',
+            DATE: 'Даты',
+            PASSPORT: 'Паспорта',
+            SNILS: 'СНИЛС',
+            INN: 'ИНН',
+            CARD: 'Карты',
+            ADDRESS: 'Адреса',
+            CITY: 'Города',
+            ORG: 'Организации',
+            AGE: 'Возраст'
+        };
+        const items = Object.entries(types).map(([k, v]) => `${labels[k] || k}: ${v}`);
+        return `Заменено ${Object.values(types).reduce((a, b) => a + b, 0)} элементов (${items.join(', ')})`;
+    }
+
+    // Обработчики
+    document.getElementById('anon-btn').onclick = function() {
+        const input = document.getElementById('anon-input').value.trim();
+        const error = document.getElementById('anon-error');
+        const result = document.getElementById('anon-result');
+
+        error.classList.remove('visible');
+
+        if (!input) {
+            error.textContent = 'Пожалуйста, вставьте текст сессии';
+            error.classList.add('visible');
+            return;
+        }
+
+        const { result: anonymized, count, types } = anonymize(input);
+
+        if (count === 0) {
+            error.textContent = 'Персональные данные не найдены. Проверьте текст или добавьте данные вручную.';
+            error.classList.add('visible');
+            return;
+        }
+
+        document.getElementById('anon-output').innerHTML = formatResult(anonymized);
+        document.getElementById('anon-stats').textContent = formatStats(types);
+        result.classList.add('visible');
+    };
+
+    document.getElementById('anon-copy').onclick = function() {
+        const text = document.getElementById('anon-output').innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            this.textContent = 'Скопировано!';
+            setTimeout(() => this.textContent = 'Копировать', 2000);
+        });
+    };
+})();
+</script>
