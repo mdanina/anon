@@ -1,0 +1,533 @@
+<!-- Анонимизатор для Tilda - быстрая версия с эвристиками -->
+<div id="anon-app">
+<style>
+#anon-app {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    color: #1a1a1a;
+    line-height: 1.6;
+}
+#anon-app * { box-sizing: border-box; }
+#anon-app h2 {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+#anon-app .subtitle {
+    text-align: center;
+    color: #666;
+    font-size: 0.95rem;
+    margin-bottom: 2rem;
+}
+#anon-app .privacy {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: #eef2ff;
+    color: #4f46e5;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-size: 0.85rem;
+    margin: 0 auto 2rem;
+    width: fit-content;
+}
+#anon-app textarea {
+    width: 100%;
+    min-height: 250px;
+    padding: 1rem;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: 1.7;
+    resize: vertical;
+    margin-bottom: 1rem;
+}
+#anon-app textarea:focus {
+    outline: none;
+    border-color: #4f46e5;
+}
+#anon-app .btn {
+    display: block;
+    width: 100%;
+    padding: 1rem;
+    background: #4f46e5;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+#anon-app .btn:hover { background: #4338ca; }
+#anon-app .result {
+    margin-top: 2rem;
+    display: none;
+}
+#anon-app .result.visible { display: block; }
+#anon-app .result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+#anon-app .result-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+#anon-app .copy-btn {
+    padding: 0.5rem 1rem;
+    background: #f3f4f6;
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+#anon-app .copy-btn:hover { background: #e5e5e5; }
+#anon-app .output {
+    background: #f9fafb;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    padding: 1rem;
+    min-height: 200px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.7;
+    font-size: 1rem;
+}
+#anon-app .tag {
+    display: inline;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-weight: 500;
+}
+#anon-app .tag.person { background: #fef3c7; color: #92400e; }
+#anon-app .tag.contact { background: #dbeafe; color: #1e40af; }
+#anon-app .tag.location { background: #d1fae5; color: #065f46; }
+#anon-app .tag.org { background: #e0e7ff; color: #3730a3; }
+#anon-app .tag.id { background: #fce7f3; color: #9d174d; }
+#anon-app .tag.financial { background: #fee2e2; color: #991b1b; }
+#anon-app .stats {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f0fdf4;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #166534;
+}
+#anon-app .error {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #fef2f2;
+    border-radius: 8px;
+    color: #dc2626;
+    display: none;
+}
+#anon-app .error.visible { display: block; }
+</style>
+
+<h2>Анонимизатор сессий</h2>
+<p class="subtitle">Автоматическая защита персональных данных в психотерапевтических записях</p>
+
+<div class="privacy">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    </svg>
+    Данные обрабатываются локально в вашем браузере
+</div>
+
+<textarea id="anon-input" placeholder="Вставьте текст психотерапевтической сессии..."></textarea>
+
+<button class="btn" id="anon-btn">Анонимизировать</button>
+
+<div class="error" id="anon-error"></div>
+
+<div class="result" id="anon-result">
+    <div class="result-header">
+        <span class="result-title">Анонимизированный текст</span>
+        <button class="copy-btn" id="anon-copy">Копировать</button>
+    </div>
+    <div class="output" id="anon-output"></div>
+    <div class="stats" id="anon-stats"></div>
+</div>
+</div>
+
+<script>
+(function() {
+    // =====================================================
+    // БОЛЬШАЯ БАЗА РУССКИХ ИМЁН (500+)
+    // =====================================================
+    const NAMES_FEMALE = [
+        // Полные женские имена
+        'Августа','Авдотья','Аврора','Агата','Агафья','Аглая','Агнесса','Агния','Ада','Аделаида',
+        'Аделина','Адель','Аза','Азалия','Аида','Аксинья','Алевтина','Александра','Алёна','Алена',
+        'Алина','Алиса','Алла','Альбина','Амалия','Амелия','Анастасия','Ангелина','Анжела','Анжелика',
+        'Анисья','Анна','Антонина','Анфиса','Аполлинария','Ариадна','Арина','Беатриса','Белла','Берта',
+        'Богдана','Божена','Борислава','Бронислава','Валентина','Валерия','Ванда','Варвара','Василина',
+        'Василиса','Венера','Вера','Вероника','Веста','Викторина','Виктория','Вилена','Виола','Виолетта',
+        'Виринея','Вита','Виталина','Виталия','Влада','Владилена','Владислава','Владлена','Власта',
+        'Галина','Гелена','Гелла','Гертруда','Глафира','Гликерия','Глория','Грета','Дана','Дарина',
+        'Дария','Дарья','Джульетта','Диана','Дина','Доминика','Домна','Дора','Ева','Евангелина',
+        'Евгения','Евдокия','Евлалия','Евлампия','Евпраксия','Евстолия','Екатерина','Елена','Елизавета',
+        'Жанна','Жозефина','Зара','Земфира','Зинаида','Зиновия','Злата','Зоя','Ивана','Изабелла',
+        'Изольда','Илона','Инга','Инесса','Инна','Иоанна','Ираида','Ирина','Ирма','Искра',
+        'Ия','Камилла','Капитолина','Карина','Каролина','Катерина','Кира','Клавдия','Клара','Клариса',
+        'Клеопатра','Конкордия','Констанция','Кора','Кристина','Ксения','Лада','Лайма','Лана','Лариса',
+        'Лаура','Леда','Лейла','Леокадия','Леонида','Леонила','Леонтина','Лиана','Лидия','Лика',
+        'Лилиана','Лилия','Лина','Линда','Лия','Лора','Луиза','Лукерья','Лукреция','Любава',
+        'Любовь','Любомира','Людмила','Магдалина','Майя','Мальвина','Маргарита','Марианна','Мариетта',
+        'Марина','Мария','Марта','Марфа','Матильда','Матрёна','Матрена','Мелания','Мелисса','Милада',
+        'Милана','Милена','Милица','Милослава','Мира','Мирослава','Михайлина','Моника','Муза','Надежда',
+        'Настасья','Наталия','Наталья','Нелли','Ника','Нина','Нинель','Нонна','Оксана','Олеся',
+        'Оливия','Олимпиада','Ольга','Пелагея','Полина','Прасковья','Рада','Радмила','Раиса','Рахиль',
+        'Регина','Рената','Римма','Рогнеда','Роза','Розалия','Розамунда','Роксана','Ростислава','Руслана',
+        'Руфина','Сабина','Саломея','Сарра','Светлана','Серафима','Сильва','Сильвия','Симона','Снежана',
+        'Соломония','Софья','София','Станислава','Стелла','Степанида','Стефания','Сусанна','Таисия','Тамара',
+        'Тамила','Татьяна','Текуса','Ульяна','Устинья','Фаина','Фёкла','Фекла','Феодора','Феодосия',
+        'Флора','Флорентина','Фрида','Харита','Христина','Эвелина','Эдита','Элеонора','Элла','Эльвира',
+        'Эльза','Эмилия','Эмма','Эрика','Юлиана','Юлия','Юнона','Ядвига','Яна','Ярослава',
+        // Уменьшительные женские
+        'Ава','Агаша','Ада','Аля','Анюта','Ася','Валя','Варя','Вася','Вера','Вика','Вита',
+        'Габи','Галя','Даша','Дуня','Дуся','Ева','Женя','Зина','Зоя','Ира','Иришка',
+        'Катя','Кира','Клава','Кристи','Ксюша','Лана','Лара','Лена','Лера','Леся','Лида','Лиза',
+        'Лика','Лина','Лия','Люба','Люда','Люся','Ляля','Мара','Маня','Маринка','Маруся','Маша',
+        'Мила','Мирра','Муся','Надя','Наста','Настя','Ната','Наташа','Нелля','Ника','Нина','Нона',
+        'Нюра','Нюша','Оксанка','Оля','Поля','Рая','Регина','Рита','Роза','Рося','Света','Сима',
+        'Соня','Стася','Стеша','Тамарка','Таня','Тася','Тома','Уля','Фая','Феня','Шура','Эля','Юля','Яна'
+    ];
+
+    const NAMES_MALE = [
+        // Полные мужские имена
+        'Абрам','Аввакум','Август','Авдей','Аверьян','Авксентий','Адам','Адриан','Азарий','Аким',
+        'Александр','Алексей','Альберт','Альфред','Амвросий','Ананий','Анатолий','Андрей','Андриан','Андрон',
+        'Анисим','Антип','Антон','Антонин','Аполлон','Аристарх','Аркадий','Арнольд','Арсений','Арсентий',
+        'Артём','Артем','Артемий','Артур','Архип','Афанасий','Богдан','Болеслав','Борис','Борислав',
+        'Бронислав','Вадим','Валентин','Валерий','Валерьян','Варлам','Варфоломей','Василий','Велимир','Венедикт',
+        'Вениамин','Викентий','Виктор','Вилен','Виссарион','Виталий','Витольд','Владилен','Владимир','Владислав',
+        'Владлен','Влас','Всеволод','Вячеслав','Гавриил','Геласий','Геннадий','Георгий','Герасим','Герман',
+        'Глеб','Гордей','Григорий','Гурий','Давид','Давыд','Дамиан','Даниил','Данил','Данила','Дементий',
+        'Демид','Демьян','Денис','Дмитрий','Добрыня','Дорофей','Евгений','Евграф','Евдоким','Евсей',
+        'Евстафий','Егор','Елизар','Елисей','Емельян','Еремей','Ермолай','Ерофей','Ефим','Ефрем',
+        'Захар','Зиновий','Иван','Игнат','Игнатий','Игорь','Измаил','Изяслав','Илларион','Илья',
+        'Иннокентий','Иосиф','Ипполит','Ираклий','Исаак','Исай','Казимир','Каллистрат','Капитон','Карл',
+        'Карп','Касьян','Ким','Кир','Кирилл','Клавдий','Клим','Климент','Кондрат','Константин',
+        'Корней','Корнил','Кузьма','Лавр','Лаврентий','Лазарь','Лев','Леон','Леонид','Леонтий',
+        'Леопольд','Лука','Лукьян','Любим','Любомир','Макар','Максим','Максимилиан','Мануил','Марат',
+        'Марк','Мартин','Мартын','Матвей','Мефодий','Милан','Мирон','Мирослав','Митрофан','Михаил',
+        'Модест','Моисей','Мстислав','Назар','Наум','Нестор','Никандр','Никанор','Никита','Никифор',
+        'Николай','Никон','Нил','Олег','Орест','Осип','Остап','Павел','Панкрат','Пантелеймон',
+        'Парамон','Пармен','Пахом','Пётр','Петр','Платон','Поликарп','Порфирий','Потап','Прокофий',
+        'Прохор','Радислав','Радомир','Разумник','Ратибор','Ратмир','Родион','Роман','Ростислав','Руслан',
+        'Рюрик','Савва','Савелий','Самсон','Самуил','Святополк','Святослав','Севастьян','Северин','Северьян',
+        'Семён','Семен','Серафим','Сергей','Сигизмунд','Сидор','Сила','Сильвестр','Симон','Созон',
+        'Соломон','Спартак','Спиридон','Станислав','Степан','Тарас','Тимофей','Тимур','Тит','Тихон',
+        'Трифон','Трофим','Ульян','Устин','Фаддей','Фёдор','Федор','Федосей','Федот','Феликс',
+        'Феодосий','Феофан','Ферапонт','Филарет','Филимон','Филипп','Флор','Фока','Фома','Фортунат',
+        'Фрол','Харитон','Христофор','Эдуард','Эммануил','Эраст','Эрнест','Юлиан','Юлий','Юрий',
+        'Яков','Ян','Ярополк','Ярослав',
+        // Уменьшительные мужские
+        'Алёша','Алик','Андрюша','Антоша','Аркаша','Артёмка','Боря','Вадик','Валера',
+        'Ваня','Вася','Витя','Вова','Володя','Гена','Геша','Гоша','Гриша','Данька','Денисик',
+        'Дима','Димка','Жека','Женя','Жора','Захарка','Ваня','Игорёк','Илюша','Кеша','Кирюша',
+        'Коля','Костик','Костя','Лёва','Лёня','Лёша','Лёшка','Макс','Максик','Матвейка','Миша',
+        'Мишка','Никитка','Олежек','Олежка','Паша','Пашка','Петя','Петька','Рома','Ромка',
+        'Руся','Саня','Саша','Сашка','Серёга','Серёжа','Серёжка','Сёма','Славик','Стас',
+        'Стёпа','Стёпка','Тёма','Тима','Тимка','Тимоша','Толик','Толя','Федя','Филя',
+        'Эдик','Юра','Юрик','Юрка','Яша','Ярик'
+    ];
+
+    // Отчества
+    const PATRONYMICS_ENDINGS = ['ович', 'евич', 'ич', 'овна', 'евна', 'ична', 'инична'];
+
+    // Частые фамилии (окончания)
+    const SURNAME_ENDINGS = ['ов', 'ев', 'ёв', 'ин', 'ын', 'ский', 'цкий', 'ая', 'яя', 'ова', 'ева', 'ёва', 'ина', 'ына'];
+
+    // Объединяем все имена в Set для быстрого поиска
+    const ALL_NAMES = new Set([...NAMES_FEMALE, ...NAMES_MALE].map(n => n.toLowerCase()));
+
+    // =====================================================
+    // ПАТТЕРНЫ ДЛЯ СТРУКТУРИРОВАННЫХ ДАННЫХ
+    // =====================================================
+    const PATTERNS = [
+        // Телефоны
+        { type: 'PHONE', cat: 'contact', patterns: [
+            /(?:\+7|8)[\s\-\(]?\d{3}[\s\-\)]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}/g,
+        ]},
+        // Email
+        { type: 'EMAIL', cat: 'contact', patterns: [
+            /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g,
+        ]},
+        // Даты
+        { type: 'DATE', cat: 'id', patterns: [
+            /\b\d{1,2}[.\/]\d{1,2}[.\/]\d{2,4}\b/g,
+            /\b\d{1,2}\s+(?:января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)(?:\s+\d{4})?\b/gi,
+        ]},
+        // Паспорт
+        { type: 'PASSPORT', cat: 'id', patterns: [
+            /\b\d{2}\s\d{2}\s\d{6}\b/g,
+        ]},
+        // СНИЛС
+        { type: 'SNILS', cat: 'id', patterns: [
+            /\b\d{3}[\s\-]\d{3}[\s\-]\d{3}[\s\-]\d{2}\b/g,
+        ]},
+        // Банковские карты
+        { type: 'CARD', cat: 'financial', patterns: [
+            /\b\d{4}[\s\-]\d{4}[\s\-]\d{4}[\s\-]\d{4}\b/g,
+        ]},
+        // Адреса
+        { type: 'ADDRESS', cat: 'location', patterns: [
+            /(?:ул\.|улица|пр\.|проспект|пер\.|переулок)\s+[А-ЯЁа-яё\s\.\-]+,?\s*(?:д\.|дом)?\s*\d+[а-яё]?/gi,
+        ]},
+        // Города
+        { type: 'CITY', cat: 'location', patterns: [
+            /\b(?:г\.|город)\s*[А-ЯЁ][а-яё\-]+/gi,
+        ]},
+        // Организации
+        { type: 'ORG', cat: 'org', patterns: [
+            /(?:ООО|ОАО|ЗАО|ПАО|АО|ИП)\s*[«""]?[А-ЯЁа-яё][А-ЯЁа-яё\s\-]*[»""]?/g,
+        ]},
+        // Возраст
+        { type: 'AGE', cat: 'person', patterns: [
+            /\b\d{1,2}\s*(?:лет|года|год)\b/gi,
+        ]},
+    ];
+
+    // =====================================================
+    // УМНОЕ РАСПОЗНАВАНИЕ ИМЁН
+    // =====================================================
+
+    function isName(word) {
+        if (!word || word.length < 2) return false;
+        const lower = word.toLowerCase();
+        return ALL_NAMES.has(lower);
+    }
+
+    function isPatronymic(word) {
+        if (!word || word.length < 4) return false;
+        const lower = word.toLowerCase();
+        return PATRONYMICS_ENDINGS.some(e => lower.endsWith(e));
+    }
+
+    function isSurname(word) {
+        if (!word || word.length < 2) return false;
+        const lower = word.toLowerCase();
+        return SURNAME_ENDINGS.some(e => lower.endsWith(e));
+    }
+
+    function findPersonNames(text) {
+        const entities = [];
+        const used = new Set();
+
+        // 1. ФИО: Иванов Иван Иванович / Иван Иванович Иванов
+        const fioPattern = /\b([А-ЯЁ][а-яё]+)\s+([А-ЯЁ][а-яё]+)\s+([А-ЯЁ][а-яё]+(?:ович|евич|ич|овна|евна|ична|инична))\b/g;
+        let m;
+        while ((m = fioPattern.exec(text)) !== null) {
+            entities.push({ text: m[0], type: 'PERSON', cat: 'person', start: m.index, end: m.index + m[0].length });
+            used.add(`${m.index}-${m.index + m[0].length}`);
+        }
+
+        // 2. Имя Отчество
+        const ioPattern = /\b([А-ЯЁ][а-яё]+)\s+([А-ЯЁ][а-яё]+(?:ович|евич|ич|овна|евна|ична|инична))\b/g;
+        while ((m = ioPattern.exec(text)) !== null) {
+            const key = `${m.index}-${m.index + m[0].length}`;
+            if (!used.has(key)) {
+                entities.push({ text: m[0], type: 'PERSON', cat: 'person', start: m.index, end: m.index + m[0].length });
+                used.add(key);
+            }
+        }
+
+        // 3. И.О. Фамилия / Фамилия И.О.
+        const shortPattern = /\b([А-ЯЁ]\.[А-ЯЁ]\.)\s*([А-ЯЁ][а-яё]+)\b|\b([А-ЯЁ][а-яё]+)\s+([А-ЯЁ]\.[А-ЯЁ]\.)/g;
+        while ((m = shortPattern.exec(text)) !== null) {
+            const key = `${m.index}-${m.index + m[0].length}`;
+            if (!used.has(key)) {
+                entities.push({ text: m[0], type: 'PERSON', cat: 'person', start: m.index, end: m.index + m[0].length });
+                used.add(key);
+            }
+        }
+
+        // 4. Одиночные имена из словаря (контекстно)
+        // Ищем слова с заглавной буквы
+        const wordPattern = /\b[А-ЯЁ][а-яё]+\b/g;
+        while ((m = wordPattern.exec(text)) !== null) {
+            const word = m[0];
+            const start = m.index;
+            const end = start + word.length;
+            const key = `${start}-${end}`;
+
+            // Пропускаем если уже нашли как часть ФИО
+            let overlap = false;
+            for (const u of used) {
+                const [us, ue] = u.split('-').map(Number);
+                if (start >= us && end <= ue) { overlap = true; break; }
+            }
+            if (overlap) continue;
+
+            // Проверяем, является ли именем
+            if (isName(word)) {
+                // Дополнительная проверка контекста
+                const before = text.substring(Math.max(0, start - 20), start).toLowerCase();
+                const after = text.substring(end, Math.min(text.length, end + 10));
+
+                // Вероятно имя если: после "привет", после запятой в обращении, после двоеточия и т.д.
+                const isLikelyName =
+                    /(?:привет|здравствуй|дорог[аоие][йяе]?|уважаем[аыйое][йяе]?|клиент|терапевт|пациент)[,:]?\s*$/i.test(before) ||
+                    /^[,!.]/.test(after) ||
+                    /[\-–—]\s*$/.test(before) ||  // После тире (диалог)
+                    /:\s*$/.test(before) ||        // После двоеточия
+                    /SPEAKER_\d+\s*$/i.test(before) || // После метки спикера
+                    /\[\d{2}:\d{2}:\d{2}\]\s*[\-–—]?\s*$/i.test(before); // После таймкода
+
+                if (isLikelyName || isName(word)) {
+                    entities.push({ text: word, type: 'NAME', cat: 'person', start, end });
+                    used.add(key);
+                }
+            }
+        }
+
+        return entities;
+    }
+
+    // =====================================================
+    // ОСНОВНАЯ ЛОГИКА
+    // =====================================================
+
+    function findAllEntities(text) {
+        const entities = [];
+
+        // 1. Структурированные данные (телефоны, email и т.д.)
+        for (const { type, cat, patterns } of PATTERNS) {
+            for (const pattern of patterns) {
+                const p = new RegExp(pattern.source, pattern.flags);
+                let m;
+                while ((m = p.exec(text)) !== null) {
+                    entities.push({
+                        text: m[0],
+                        type,
+                        cat,
+                        start: m.index,
+                        end: m.index + m[0].length
+                    });
+                }
+            }
+        }
+
+        // 2. Имена
+        const nameEntities = findPersonNames(text);
+        entities.push(...nameEntities);
+
+        // Убираем пересечения (приоритет длинным)
+        entities.sort((a, b) => (b.end - b.start) - (a.end - a.start));
+
+        const result = [];
+        const used = [];
+
+        for (const e of entities) {
+            const overlaps = used.some(u => e.start < u.end && e.end > u.start);
+            if (!overlaps) {
+                result.push(e);
+                used.push({ start: e.start, end: e.end });
+            }
+        }
+
+        return result.sort((a, b) => a.start - b.start);
+    }
+
+    function anonymize(text, entities) {
+        if (!entities.length) return { result: text, count: 0, types: {} };
+
+        const map = {};
+        const types = {};
+        let result = '';
+        let lastEnd = 0;
+
+        for (const e of entities) {
+            result += text.substring(lastEnd, e.start);
+
+            if (!map[e.type]) map[e.type] = [];
+
+            let idx = map[e.type].findIndex(v => v.toLowerCase() === e.text.toLowerCase());
+            if (idx === -1) {
+                map[e.type].push(e.text);
+                idx = map[e.type].length - 1;
+            }
+
+            result += `<${e.type}_${idx + 1}>`;
+            types[e.type] = (types[e.type] || 0) + 1;
+            lastEnd = e.end;
+        }
+
+        result += text.substring(lastEnd);
+        return { result, count: entities.length, types, entities };
+    }
+
+    function formatResult(text, entities) {
+        const catMap = {};
+        for (const e of entities) {
+            catMap[e.type] = e.cat || 'id';
+        }
+
+        return text.replace(/<([A-Z_]+)_(\d+)>/g, (match, type, idx) => {
+            const cat = catMap[type] || 'id';
+            return `<span class="tag ${cat}">&lt;${type}_${idx}&gt;</span>`;
+        });
+    }
+
+    function formatStats(types) {
+        const labels = {
+            PERSON: 'ФИО', NAME: 'Имена', PHONE: 'Телефоны', EMAIL: 'Email',
+            DATE: 'Даты', PASSPORT: 'Паспорта', SNILS: 'СНИЛС', CARD: 'Карты',
+            ADDRESS: 'Адреса', CITY: 'Города', ORG: 'Организации', AGE: 'Возраст'
+        };
+        const items = Object.entries(types).map(([k, v]) => `${labels[k] || k}: ${v}`);
+        const total = Object.values(types).reduce((a, b) => a + b, 0);
+        return `Заменено ${total} элементов (${items.join(', ')})`;
+    }
+
+    // =====================================================
+    // ОБРАБОТЧИКИ
+    // =====================================================
+
+    document.getElementById('anon-btn').onclick = function() {
+        const input = document.getElementById('anon-input').value.trim();
+        const error = document.getElementById('anon-error');
+        const resultEl = document.getElementById('anon-result');
+
+        error.classList.remove('visible');
+        resultEl.classList.remove('visible');
+
+        if (!input) {
+            error.textContent = 'Пожалуйста, вставьте текст сессии';
+            error.classList.add('visible');
+            return;
+        }
+
+        const entities = findAllEntities(input);
+
+        if (entities.length === 0) {
+            error.textContent = 'Персональные данные не найдены.';
+            error.classList.add('visible');
+            return;
+        }
+
+        const { result, types } = anonymize(input, entities);
+
+        document.getElementById('anon-output').innerHTML = formatResult(result, entities);
+        document.getElementById('anon-stats').textContent = formatStats(types);
+        resultEl.classList.add('visible');
+    };
+
+    document.getElementById('anon-copy').onclick = function() {
+        const text = document.getElementById('anon-output').innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            this.textContent = 'Скопировано!';
+            setTimeout(() => this.textContent = 'Копировать', 2000);
+        });
+    };
+})();
+</script>
