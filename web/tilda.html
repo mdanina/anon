@@ -1,0 +1,805 @@
+<!-- Анонимизатор для Tilda - вставьте этот код в блок T123 (HTML-код) -->
+<div id="anonymizer-app">
+<style>
+#anonymizer-app {
+    --bg-primary: #fafafa;
+    --bg-secondary: #ffffff;
+    --text-primary: #1a1a1a;
+    --text-secondary: #666666;
+    --accent: #4f46e5;
+    --accent-hover: #4338ca;
+    --border: #e5e5e5;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --tag-bg: #eef2ff;
+    --tag-text: #4f46e5;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    color: var(--text-primary);
+    line-height: 1.6;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+#anonymizer-app * {
+    box-sizing: border-box;
+}
+
+#anonymizer-app .anon-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+#anonymizer-app .anon-header h2 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+
+#anonymizer-app .anon-header p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+#anonymizer-app .privacy-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--tag-bg);
+    color: var(--tag-text);
+    padding: 0.35rem 0.75rem;
+    border-radius: 2rem;
+    font-size: 0.8rem;
+    margin-top: 0.75rem;
+}
+
+#anonymizer-app .anon-tabs {
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+#anonymizer-app .anon-tab {
+    padding: 0.75rem 1.25rem;
+    background: none;
+    border: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s;
+}
+
+#anonymizer-app .anon-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
+#anonymizer-app .anon-tab:hover:not(.active) {
+    color: var(--text-primary);
+}
+
+#anonymizer-app .anon-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    #anonymizer-app .anon-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+#anonymizer-app .anon-panel {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+#anonymizer-app .anon-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+#anonymizer-app .anon-panel-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+#anonymizer-app .anon-panel-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+#anonymizer-app .anon-textarea {
+    width: 100%;
+    min-height: 280px;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    resize: vertical;
+    transition: border-color 0.2s;
+}
+
+#anonymizer-app .anon-textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+#anonymizer-app .anon-output {
+    width: 100%;
+    min-height: 280px;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    background: var(--bg-primary);
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+#anonymizer-app .anon-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#anonymizer-app .anon-btn-primary {
+    background: var(--accent);
+    color: white;
+}
+
+#anonymizer-app .anon-btn-primary:hover {
+    background: var(--accent-hover);
+}
+
+#anonymizer-app .anon-btn-secondary {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+}
+
+#anonymizer-app .anon-btn-secondary:hover {
+    background: var(--border);
+}
+
+#anonymizer-app .anon-btn-small {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+}
+
+#anonymizer-app .anon-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+#anonymizer-app .anon-help {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+}
+
+#anonymizer-app .anon-tag {
+    display: inline;
+    background: var(--tag-bg);
+    color: var(--tag-text);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+#anonymizer-app .anon-tag.person { background: #fef3c7; color: #92400e; }
+#anonymizer-app .anon-tag.contact { background: #dbeafe; color: #1e40af; }
+#anonymizer-app .anon-tag.location { background: #d1fae5; color: #065f46; }
+#anonymizer-app .anon-tag.id { background: #fce7f3; color: #9d174d; }
+#anonymizer-app .anon-tag.financial { background: #fee2e2; color: #991b1b; }
+#anonymizer-app .anon-tag.org { background: #e0e7ff; color: #3730a3; }
+
+#anonymizer-app .anon-entities {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+#anonymizer-app .anon-entities h4 {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0 0 0.75rem 0;
+    font-weight: 500;
+}
+
+#anonymizer-app .anon-entity {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-primary);
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+#anonymizer-app .anon-entity-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+#anonymizer-app .anon-entity-type {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    min-width: 70px;
+}
+
+#anonymizer-app .anon-entity-value {
+    font-weight: 500;
+}
+
+#anonymizer-app .anon-entity-token {
+    color: var(--accent);
+    font-family: monospace;
+    font-size: 0.8rem;
+}
+
+#anonymizer-app .anon-entity-remove {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.25rem;
+    opacity: 0.6;
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+#anonymizer-app .anon-entity-remove:hover {
+    opacity: 1;
+    color: var(--danger);
+}
+
+#anonymizer-app .anon-tab-content {
+    display: none;
+}
+
+#anonymizer-app .anon-tab-content.active {
+    display: block;
+}
+
+#anonymizer-app .anon-select-menu {
+    position: fixed;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10000;
+    display: none;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    max-width: 280px;
+}
+
+#anonymizer-app .anon-select-menu.visible {
+    display: flex;
+}
+
+#anonymizer-app .anon-select-menu button {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.75rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#anonymizer-app .anon-select-menu .cat-person { background: #fef3c7; color: #92400e; }
+#anonymizer-app .anon-select-menu .cat-contact { background: #dbeafe; color: #1e40af; }
+#anonymizer-app .anon-select-menu .cat-location { background: #d1fae5; color: #065f46; }
+#anonymizer-app .anon-select-menu .cat-id { background: #fce7f3; color: #9d174d; }
+#anonymizer-app .anon-select-menu .cat-financial { background: #fee2e2; color: #991b1b; }
+#anonymizer-app .anon-select-menu .cat-org { background: #e0e7ff; color: #3730a3; }
+
+#anonymizer-app .anon-notification {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    background: var(--text-primary);
+    color: white;
+    font-size: 0.9rem;
+    z-index: 10001;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s;
+}
+
+#anonymizer-app .anon-notification.visible {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+#anonymizer-app .anon-notification.success { background: var(--success); }
+#anonymizer-app .anon-notification.error { background: var(--danger); }
+
+#anonymizer-app .anon-empty {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
+
+#anonymizer-app .anon-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10002;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s;
+}
+
+#anonymizer-app .anon-modal-overlay.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+#anonymizer-app .anon-modal {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 1.5rem;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+#anonymizer-app .anon-modal h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+}
+
+#anonymizer-app .anon-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+#anonymizer-app .anon-form-group {
+    margin-bottom: 1rem;
+}
+
+#anonymizer-app .anon-form-group label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+#anonymizer-app .anon-form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-family: monospace;
+    min-height: 150px;
+}
+</style>
+
+<div class="anon-header">
+    <h2>Анонимизатор сессий</h2>
+    <p>Безопасная анонимизация психотерапевтических записей</p>
+    <div class="privacy-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        Все данные обрабатываются локально в браузере
+    </div>
+</div>
+
+<div class="anon-tabs">
+    <button class="anon-tab active" data-tab="anonymize">Анонимизация</button>
+    <button class="anon-tab" data-tab="deanonymize">Деанонимизация</button>
+</div>
+
+<div id="anon-tab-anonymize" class="anon-tab-content active">
+    <div class="anon-layout">
+        <div class="anon-panel">
+            <div class="anon-panel-header">
+                <span class="anon-panel-title">Исходный текст</span>
+                <div class="anon-panel-actions">
+                    <button class="anon-btn anon-btn-secondary anon-btn-small" id="anon-sample">Пример</button>
+                    <button class="anon-btn anon-btn-secondary anon-btn-small" id="anon-clear">Очистить</button>
+                </div>
+            </div>
+            <textarea id="anon-input" class="anon-textarea" placeholder="Вставьте текст сессии...&#10;&#10;Выделите текст мышкой, чтобы отметить персональные данные вручную."></textarea>
+            <div class="anon-actions">
+                <button class="anon-btn anon-btn-primary" id="anon-detect">Автоопределение</button>
+                <button class="anon-btn anon-btn-primary" id="anon-run">Анонимизировать</button>
+            </div>
+            <p class="anon-help">Выделите текст и выберите тип данных для ручной разметки</p>
+        </div>
+
+        <div class="anon-panel">
+            <div class="anon-panel-header">
+                <span class="anon-panel-title">Результат</span>
+                <div class="anon-panel-actions">
+                    <button class="anon-btn anon-btn-secondary anon-btn-small" id="anon-copy">Копировать</button>
+                    <button class="anon-btn anon-btn-secondary anon-btn-small" id="anon-export">Экспорт</button>
+                </div>
+            </div>
+            <div id="anon-output" class="anon-output">
+                <div class="anon-empty">Результат появится здесь</div>
+            </div>
+            <div id="anon-entities" class="anon-entities" style="display:none;">
+                <h4>Найденные данные (<span id="anon-count">0</span>)</h4>
+                <div id="anon-entity-list"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="anon-tab-deanonymize" class="anon-tab-content">
+    <div class="anon-layout">
+        <div class="anon-panel">
+            <div class="anon-panel-header">
+                <span class="anon-panel-title">Анонимизированный текст</span>
+                <div class="anon-panel-actions">
+                    <button class="anon-btn anon-btn-secondary anon-btn-small" id="anon-import">Импорт</button>
+                </div>
+            </div>
+            <textarea id="anon-deanon-input" class="anon-textarea" placeholder="Вставьте текст от LLM с токенами <PII_...>"></textarea>
+            <div class="anon-actions">
+                <button class="anon-btn anon-btn-primary" id="anon-deanon">Деанонимизировать</button>
+            </div>
+        </div>
+
+        <div class="anon-panel">
+            <div class="anon-panel-header">
+                <span class="anon-panel-title">Восстановленный текст</span>
+                <div class="anon-panel-actions">
+                    <button class="anon-btn anon-btn-secondary anon-btn-small" id="anon-copy-deanon">Копировать</button>
+                </div>
+            </div>
+            <div id="anon-deanon-output" class="anon-output">
+                <div class="anon-empty">Результат появится здесь</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="anon-select-menu" id="anon-menu">
+    <button class="cat-person" data-type="PERSON">Имя</button>
+    <button class="cat-person" data-type="THERAPIST_NAME">Терапевт</button>
+    <button class="cat-contact" data-type="PHONE_NUMBER">Телефон</button>
+    <button class="cat-contact" data-type="EMAIL">Email</button>
+    <button class="cat-location" data-type="ADDRESS">Адрес</button>
+    <button class="cat-location" data-type="CITY">Город</button>
+    <button class="cat-org" data-type="ORGANIZATION">Организация</button>
+    <button class="cat-id" data-type="PASSPORT_NUMBER">Паспорт</button>
+    <button class="cat-financial" data-type="BANK_ACCOUNT">Счёт</button>
+    <button class="cat-person" data-type="AGE">Возраст</button>
+</div>
+
+<div class="anon-modal-overlay" id="anon-import-modal">
+    <div class="anon-modal">
+        <h3>Импорт маппинга</h3>
+        <div class="anon-form-group">
+            <label>JSON-маппинг</label>
+            <textarea id="anon-import-text" placeholder='{"PERSON": ["Иван Петров"]}'></textarea>
+        </div>
+        <div class="anon-modal-actions">
+            <button class="anon-btn anon-btn-secondary" id="anon-import-cancel">Отмена</button>
+            <button class="anon-btn anon-btn-primary" id="anon-import-confirm">Импорт</button>
+        </div>
+    </div>
+</div>
+
+<div class="anon-notification" id="anon-notify"></div>
+</div>
+
+<script>
+(function() {
+    // State
+    const state = { entityMap: {}, entities: [] };
+
+    // Regex patterns
+    const PATTERNS = {
+        PHONE_NUMBER: [/(?:\+7|8)[\s-]?\(?\d{3}\)?[\s-]?\d{3}[\s-]?\d{2}[\s-]?\d{2}/g, /(?:\+7|8)\d{10}/g],
+        EMAIL: [/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g],
+        DATE: [/\b\d{1,2}[.\/\-]\d{1,2}[.\/\-]\d{2,4}\b/g, /\b\d{1,2}\s+(?:января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)(?:\s+\d{4})?\b/gi],
+        PASSPORT_NUMBER: [/\b\d{2}\s?\d{2}\s?\d{6}\b/g],
+        INSURANCE_NUMBER: [/\b\d{3}[\s-]?\d{3}[\s-]?\d{3}[\s-]?\d{2}\b/g],
+        CREDIT_CARD_NUMBER: [/\b(?:\d{4}[\s-]?){3}\d{4}\b/g],
+        NATIONAL_ID_NUMBER: [/\b\d{10,12}\b/g]
+    };
+
+    const CATEGORIES = {
+        PERSON: 'person', THERAPIST_NAME: 'person', AGE: 'person', DATE_OF_BIRTH: 'person',
+        PHONE_NUMBER: 'contact', EMAIL: 'contact',
+        ADDRESS: 'location', CITY: 'location',
+        PASSPORT_NUMBER: 'id', NATIONAL_ID_NUMBER: 'id', INSURANCE_NUMBER: 'id', DATE: 'id',
+        CREDIT_CARD_NUMBER: 'financial', BANK_ACCOUNT: 'financial',
+        ORGANIZATION: 'org'
+    };
+
+    const SAMPLE = `Сессия от 15.03.2024
+Клиент: Иван Петрович Сидоров
+Терапевт: Мария Александровна Козлова
+
+И.П.: На прошлой неделе я снова поссорился с женой, Еленой. Она работает в компании "Газпром Нефть". Мой номер +7 (495) 123-45-67.
+
+М.А.: Расскажите о вашей работе.
+
+И.П.: Работаю в Яндексе, офис на ул. Льва Толстого, 16. Карта 4276 1234 5678 9012. Мне 34 года, родился 25 февраля 1990.
+
+Контакт: мама, Ольга Николаевна, тел. 8-916-765-43-21.
+Паспорт: 45 12 345678
+СНИЛС: 123-456-789-01
+Email: ivan.sidorov@yandex.ru`;
+
+    // Functions
+    function notify(msg, type = 'info') {
+        const el = document.getElementById('anon-notify');
+        el.textContent = msg;
+        el.className = 'anon-notification visible ' + type;
+        setTimeout(() => el.classList.remove('visible'), 3000);
+    }
+
+    function detectPII(text) {
+        const found = [];
+        const used = [];
+        for (const [type, patterns] of Object.entries(PATTERNS)) {
+            for (const p of patterns) {
+                p.lastIndex = 0;
+                let m;
+                while ((m = p.exec(text)) !== null) {
+                    const s = m.index, e = m.index + m[0].length;
+                    if (!used.some(r => (s >= r.s && s < r.e) || (e > r.s && e <= r.e))) {
+                        found.push({ text: m[0], type, start: s, end: e });
+                        used.push({ s, e });
+                    }
+                }
+            }
+        }
+        return found.sort((a, b) => a.start - b.start);
+    }
+
+    function addEntity(text, type, start, end) {
+        if (!state.entities.some(e => e.start === start && e.end === end) && text.trim()) {
+            state.entities.push({ text, type, start, end });
+            state.entities.sort((a, b) => a.start - b.start);
+            return true;
+        }
+        return false;
+    }
+
+    function anonymize(text, entities) {
+        state.entityMap = {};
+        let result = '', lastEnd = 0;
+        for (const e of entities) {
+            result += text.substring(lastEnd, e.start);
+            if (!state.entityMap[e.type]) state.entityMap[e.type] = [];
+            let idx = state.entityMap[e.type].indexOf(e.text);
+            if (idx === -1) { state.entityMap[e.type].push(e.text); idx = state.entityMap[e.type].length - 1; }
+            result += `<PII_${e.type}_${idx + 1}>`;
+            lastEnd = e.end;
+        }
+        return result + text.substring(lastEnd);
+    }
+
+    function deanonymize(text, map) {
+        return text.replace(/<PII_(\w+)_(\d+)>/g, (m, type, idx) => {
+            const i = parseInt(idx) - 1;
+            return (map[type] && map[type][i]) ? map[type][i] : m;
+        });
+    }
+
+    function formatOutput(text) {
+        return text.replace(/<PII_(\w+)_(\d+)>/g, (m, type, idx) => {
+            const cat = CATEGORIES[type] || 'id';
+            return `<span class="anon-tag ${cat}">${m}</span>`;
+        });
+    }
+
+    function updateEntities() {
+        const el = document.getElementById('anon-entities');
+        const list = document.getElementById('anon-entity-list');
+        const count = document.getElementById('anon-count');
+        if (!state.entities.length) { el.style.display = 'none'; return; }
+        el.style.display = 'block';
+        count.textContent = state.entities.length;
+        list.innerHTML = state.entities.map((e, i) => {
+            const cat = CATEGORIES[e.type] || 'id';
+            let idx = 1;
+            if (state.entityMap[e.type]) {
+                const j = state.entityMap[e.type].indexOf(e.text);
+                if (j !== -1) idx = j + 1;
+            }
+            return `<div class="anon-entity">
+                <div class="anon-entity-left">
+                    <span class="anon-entity-type">${e.type.replace(/_/g, ' ')}</span>
+                    <span class="anon-entity-value">${e.text}</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <span class="anon-entity-token">&lt;PII_${e.type}_${idx}&gt;</span>
+                    <button class="anon-entity-remove" data-idx="${i}">×</button>
+                </div>
+            </div>`;
+        }).join('');
+        list.querySelectorAll('.anon-entity-remove').forEach(btn => {
+            btn.onclick = () => {
+                state.entities.splice(parseInt(btn.dataset.idx), 1);
+                updateEntities();
+                const text = document.getElementById('anon-input').value;
+                if (text && state.entities.length) {
+                    document.getElementById('anon-output').innerHTML = formatOutput(anonymize(text, state.entities));
+                }
+            };
+        });
+    }
+
+    // Init
+    document.querySelectorAll('#anonymizer-app .anon-tab').forEach(tab => {
+        tab.onclick = () => {
+            document.querySelectorAll('#anonymizer-app .anon-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('#anonymizer-app .anon-tab-content').forEach(c => c.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById('anon-tab-' + tab.dataset.tab).classList.add('active');
+        };
+    });
+
+    const input = document.getElementById('anon-input');
+    const menu = document.getElementById('anon-menu');
+
+    input.onmouseup = (e) => {
+        const sel = window.getSelection();
+        const text = sel.toString().trim();
+        if (text) {
+            const rect = sel.getRangeAt(0).getBoundingClientRect();
+            menu.style.left = rect.left + window.scrollX + 'px';
+            menu.style.top = rect.bottom + window.scrollY + 5 + 'px';
+            menu.classList.add('visible');
+            menu.dataset.text = text;
+            menu.dataset.start = input.selectionStart;
+            menu.dataset.end = input.selectionEnd;
+        } else {
+            menu.classList.remove('visible');
+        }
+    };
+
+    document.onclick = (e) => {
+        if (!menu.contains(e.target) && e.target !== input) menu.classList.remove('visible');
+    };
+
+    menu.querySelectorAll('button').forEach(btn => {
+        btn.onclick = () => {
+            if (addEntity(menu.dataset.text, btn.dataset.type, parseInt(menu.dataset.start), parseInt(menu.dataset.end))) {
+                notify('Добавлено: ' + menu.dataset.text, 'success');
+                updateEntities();
+            }
+            menu.classList.remove('visible');
+        };
+    });
+
+    document.getElementById('anon-detect').onclick = () => {
+        const text = input.value;
+        if (!text.trim()) { notify('Введите текст', 'error'); return; }
+        const found = detectPII(text);
+        found.forEach(e => addEntity(e.text, e.type, e.start, e.end));
+        updateEntities();
+        notify('Найдено: ' + state.entities.length, 'success');
+    };
+
+    document.getElementById('anon-run').onclick = () => {
+        const text = input.value;
+        if (!text.trim()) { notify('Введите текст', 'error'); return; }
+        if (!state.entities.length) {
+            detectPII(text).forEach(e => addEntity(e.text, e.type, e.start, e.end));
+        }
+        if (!state.entities.length) { notify('Не найдено данных. Выделите вручную.', 'error'); return; }
+        const result = anonymize(text, state.entities);
+        document.getElementById('anon-output').innerHTML = formatOutput(result);
+        updateEntities();
+        notify('Готово', 'success');
+    };
+
+    document.getElementById('anon-copy').onclick = () => {
+        const text = document.getElementById('anon-output').innerText;
+        if (text.includes('Результат появится')) { notify('Сначала анонимизируйте', 'error'); return; }
+        navigator.clipboard.writeText(text).then(() => notify('Скопировано', 'success'));
+    };
+
+    document.getElementById('anon-export').onclick = () => {
+        if (!Object.keys(state.entityMap).length) { notify('Нет данных', 'error'); return; }
+        const json = JSON.stringify(state.entityMap, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'entity_map.json';
+        a.click();
+        notify('Экспортировано', 'success');
+    };
+
+    document.getElementById('anon-sample').onclick = () => {
+        input.value = SAMPLE;
+        state.entities = [];
+        document.getElementById('anon-output').innerHTML = '<div class="anon-empty">Результат появится здесь</div>';
+        updateEntities();
+    };
+
+    document.getElementById('anon-clear').onclick = () => {
+        input.value = '';
+        state.entities = [];
+        document.getElementById('anon-output').innerHTML = '<div class="anon-empty">Результат появится здесь</div>';
+        updateEntities();
+    };
+
+    document.getElementById('anon-deanon').onclick = () => {
+        const text = document.getElementById('anon-deanon-input').value;
+        if (!text.trim()) { notify('Введите текст', 'error'); return; }
+        if (!Object.keys(state.entityMap).length) { notify('Нет маппинга. Сначала анонимизируйте или импортируйте.', 'error'); return; }
+        document.getElementById('anon-deanon-output').textContent = deanonymize(text, state.entityMap);
+        notify('Готово', 'success');
+    };
+
+    document.getElementById('anon-copy-deanon').onclick = () => {
+        const text = document.getElementById('anon-deanon-output').innerText;
+        if (text.includes('Результат появится')) { notify('Сначала деанонимизируйте', 'error'); return; }
+        navigator.clipboard.writeText(text).then(() => notify('Скопировано', 'success'));
+    };
+
+    document.getElementById('anon-import').onclick = () => {
+        document.getElementById('anon-import-modal').classList.add('visible');
+    };
+
+    document.getElementById('anon-import-cancel').onclick = () => {
+        document.getElementById('anon-import-modal').classList.remove('visible');
+    };
+
+    document.getElementById('anon-import-confirm').onclick = () => {
+        try {
+            state.entityMap = JSON.parse(document.getElementById('anon-import-text').value);
+            document.getElementById('anon-import-modal').classList.remove('visible');
+            notify('Импортировано', 'success');
+        } catch { notify('Неверный JSON', 'error'); }
+    };
+})();
+</script>
