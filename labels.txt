@@ -1,0 +1,42 @@
+person
+full name
+first name
+last name
+nickname
+username
+age
+date of birth
+birth date
+address
+phone number
+email
+email address
+postal code
+ip address
+location
+city
+country
+national ID number
+passport number
+driver's license number
+insurance number
+therapist name
+family member
+partner
+spouse
+child name
+employer
+job title
+organization
+school
+university
+social media handle
+url
+reservation number
+bank account number
+credit card number
+cvc
+transaction number
+license plate number
+identity document number
+national health insurance number
