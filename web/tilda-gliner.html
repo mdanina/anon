@@ -1,0 +1,519 @@
+<!-- Анонимизатор с GLiNER для Tilda - вставьте в блок T123 -->
+<div id="anon-app">
+<style>
+#anon-app {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    color: #1a1a1a;
+    line-height: 1.6;
+}
+#anon-app * { box-sizing: border-box; }
+#anon-app h2 {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+#anon-app .subtitle {
+    text-align: center;
+    color: #666;
+    font-size: 0.95rem;
+    margin-bottom: 2rem;
+}
+#anon-app .privacy {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: #eef2ff;
+    color: #4f46e5;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-size: 0.85rem;
+    margin: 0 auto 2rem;
+    width: fit-content;
+}
+#anon-app textarea {
+    width: 100%;
+    min-height: 250px;
+    padding: 1rem;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: 1.7;
+    resize: vertical;
+    margin-bottom: 1rem;
+}
+#anon-app textarea:focus {
+    outline: none;
+    border-color: #4f46e5;
+}
+#anon-app .btn {
+    display: block;
+    width: 100%;
+    padding: 1rem;
+    background: #4f46e5;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+#anon-app .btn:hover { background: #4338ca; }
+#anon-app .btn:disabled {
+    background: #9ca3af;
+    cursor: wait;
+}
+#anon-app .result {
+    margin-top: 2rem;
+    display: none;
+}
+#anon-app .result.visible { display: block; }
+#anon-app .result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+#anon-app .result-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+#anon-app .copy-btn {
+    padding: 0.5rem 1rem;
+    background: #f3f4f6;
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+#anon-app .copy-btn:hover { background: #e5e5e5; }
+#anon-app .output {
+    background: #f9fafb;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    padding: 1rem;
+    min-height: 200px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.7;
+    font-size: 1rem;
+}
+#anon-app .tag {
+    display: inline;
+    background: #fef3c7;
+    color: #92400e;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-weight: 500;
+}
+#anon-app .tag.person { background: #fef3c7; color: #92400e; }
+#anon-app .tag.location { background: #d1fae5; color: #065f46; }
+#anon-app .tag.org { background: #e0e7ff; color: #3730a3; }
+#anon-app .tag.contact { background: #dbeafe; color: #1e40af; }
+#anon-app .tag.id { background: #fce7f3; color: #9d174d; }
+#anon-app .tag.financial { background: #fee2e2; color: #991b1b; }
+#anon-app .stats {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f0fdf4;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #166534;
+}
+#anon-app .error {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #fef2f2;
+    border-radius: 8px;
+    color: #dc2626;
+    display: none;
+}
+#anon-app .error.visible { display: block; }
+#anon-app .loading {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #eff6ff;
+    border-radius: 8px;
+    color: #1d4ed8;
+    display: none;
+    text-align: center;
+}
+#anon-app .loading.visible { display: block; }
+#anon-app .progress {
+    width: 100%;
+    height: 6px;
+    background: #dbeafe;
+    border-radius: 3px;
+    margin-top: 0.75rem;
+    overflow: hidden;
+}
+#anon-app .progress-bar {
+    height: 100%;
+    background: #3b82f6;
+    border-radius: 3px;
+    transition: width 0.3s;
+    width: 0%;
+}
+#anon-app .model-status {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: #f9fafb;
+    border-radius: 6px;
+}
+#anon-app .model-status.ready {
+    background: #f0fdf4;
+    color: #166534;
+}
+#anon-app .model-status.error {
+    background: #fef2f2;
+    color: #dc2626;
+}
+</style>
+
+<h2>Анонимизатор сессий</h2>
+<p class="subtitle">Автоматическая защита персональных данных с помощью GLiNER AI</p>
+
+<div class="privacy">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    </svg>
+    Данные обрабатываются локально в вашем браузере
+</div>
+
+<div class="model-status" id="model-status">
+    Загрузка GLiNER модели... (первый раз ~1-2 мин, потом из кеша)
+</div>
+
+<textarea id="anon-input" placeholder="Вставьте текст психотерапевтической сессии..."></textarea>
+
+<button class="btn" id="anon-btn" disabled>Загрузка модели...</button>
+
+<div class="loading" id="anon-loading">
+    <div id="loading-text">Анализируем текст...</div>
+    <div class="progress"><div class="progress-bar" id="progress-bar"></div></div>
+</div>
+
+<div class="error" id="anon-error"></div>
+
+<div class="result" id="anon-result">
+    <div class="result-header">
+        <span class="result-title">Анонимизированный текст</span>
+        <button class="copy-btn" id="anon-copy">Копировать</button>
+    </div>
+    <div class="output" id="anon-output"></div>
+    <div class="stats" id="anon-stats"></div>
+</div>
+</div>
+
+<script type="module">
+// Импортируем GLiNER
+import { Gliner } from 'https://esm.run/gliner';
+
+// Метки для распознавания PII (как в оригинальном labels.txt)
+const PII_LABELS = [
+    "person", "full name", "first name", "last name", "nickname",
+    "therapist name", "family member", "partner", "spouse", "child name",
+    "age", "date of birth",
+    "phone number", "email", "email address",
+    "address", "city", "country", "location", "postal code",
+    "organization", "employer", "school", "university",
+    "passport number", "national ID number", "driver license number",
+    "insurance number", "bank account number", "credit card number"
+];
+
+// Категории для подсветки
+const LABEL_CATEGORIES = {
+    'person': 'person', 'full name': 'person', 'first name': 'person',
+    'last name': 'person', 'nickname': 'person', 'therapist name': 'person',
+    'family member': 'person', 'partner': 'person', 'spouse': 'person',
+    'child name': 'person', 'age': 'person', 'date of birth': 'person',
+
+    'phone number': 'contact', 'email': 'contact', 'email address': 'contact',
+
+    'address': 'location', 'city': 'location', 'country': 'location',
+    'location': 'location', 'postal code': 'location',
+
+    'organization': 'org', 'employer': 'org', 'school': 'org', 'university': 'org',
+
+    'passport number': 'id', 'national ID number': 'id',
+    'driver license number': 'id', 'insurance number': 'id',
+
+    'bank account number': 'financial', 'credit card number': 'financial'
+};
+
+let gliner = null;
+
+// Инициализация GLiNER
+async function initGliner() {
+    const statusEl = document.getElementById('model-status');
+    const btnEl = document.getElementById('anon-btn');
+
+    try {
+        statusEl.textContent = 'Инициализация GLiNER...';
+
+        gliner = new Gliner({
+            tokenizerPath: "onnx-community/gliner_multi_pii-v1",
+            onnxSettings: {
+                modelPath: "https://huggingface.co/onnx-community/gliner_multi_pii-v1/resolve/main/onnx/model.onnx",
+                executionProvider: "wasm",
+                wasmPaths: "https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/"
+            },
+            maxWidth: 12,
+            transformersSettings: {
+                allowLocalModels: false,
+                useBrowserCache: true
+            }
+        });
+
+        statusEl.textContent = 'Загрузка модели GLiNER (~100MB)...';
+
+        await gliner.initialize();
+
+        statusEl.textContent = '✓ GLiNER модель загружена и готова к работе';
+        statusEl.classList.add('ready');
+        btnEl.disabled = false;
+        btnEl.textContent = 'Анонимизировать';
+
+    } catch (e) {
+        console.error('GLiNER init error:', e);
+        statusEl.textContent = '✗ Ошибка загрузки: ' + e.message;
+        statusEl.classList.add('error');
+
+        // Fallback на простую версию
+        btnEl.disabled = false;
+        btnEl.textContent = 'Анонимизировать (без AI)';
+    }
+}
+
+// Анонимизация с GLiNER
+async function anonymizeWithGliner(text) {
+    if (!gliner) {
+        throw new Error('Модель не загружена');
+    }
+
+    const results = await gliner.inference({
+        texts: [text],
+        entities: PII_LABELS,
+        threshold: 0.3,
+        flatNer: true,
+        multiLabel: false
+    });
+
+    // results[0] содержит массив найденных сущностей
+    const entities = (results[0] || []).map(e => ({
+        text: e.text || e.word || text.substring(e.start, e.end),
+        type: (e.label || e.entity || 'unknown').replace(/\s+/g, '_').toUpperCase(),
+        start: e.start,
+        end: e.end,
+        score: e.score || 1.0,
+        category: LABEL_CATEGORIES[e.label || e.entity] || 'id'
+    }));
+
+    return entities.filter(e => e.text && e.text.length > 1);
+}
+
+// Fallback — regex для базовых паттернов
+function findEntitiesWithRegex(text) {
+    const patterns = [
+        { type: 'PHONE_NUMBER', pattern: /(?:\+7|8)[\s\-]?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}/g, cat: 'contact' },
+        { type: 'EMAIL', pattern: /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g, cat: 'contact' },
+        { type: 'DATE', pattern: /\b\d{1,2}[.\/]\d{1,2}[.\/]\d{2,4}\b/g, cat: 'id' },
+        { type: 'PASSPORT_NUMBER', pattern: /\b\d{2}\s\d{2}\s\d{6}\b/g, cat: 'id' },
+        { type: 'CREDIT_CARD_NUMBER', pattern: /\b\d{4}[\s\-]\d{4}[\s\-]\d{4}[\s\-]\d{4}\b/g, cat: 'financial' },
+    ];
+
+    const entities = [];
+    for (const { type, pattern, cat } of patterns) {
+        const p = new RegExp(pattern.source, pattern.flags);
+        let m;
+        while ((m = p.exec(text)) !== null) {
+            entities.push({
+                text: m[0],
+                type,
+                start: m.index,
+                end: m.index + m[0].length,
+                score: 1.0,
+                category: cat
+            });
+        }
+    }
+    return entities;
+}
+
+// Объединение и удаление пересечений
+function mergeEntities(entities) {
+    entities.sort((a, b) => (b.end - b.start) - (a.end - a.start));
+
+    const result = [];
+    const used = [];
+
+    for (const entity of entities) {
+        const overlaps = used.some(u => entity.start < u.end && entity.end > u.start);
+        if (!overlaps) {
+            result.push(entity);
+            used.push({ start: entity.start, end: entity.end });
+        }
+    }
+
+    return result.sort((a, b) => a.start - b.start);
+}
+
+// Анонимизация текста
+function anonymize(text, entities) {
+    if (!entities.length) return { result: text, count: 0, types: {} };
+
+    const map = {};
+    const types = {};
+    let result = '';
+    let lastEnd = 0;
+
+    for (const e of entities) {
+        result += text.substring(lastEnd, e.start);
+
+        if (!map[e.type]) map[e.type] = [];
+
+        let idx = map[e.type].findIndex(v => v.toLowerCase() === e.text.toLowerCase());
+        if (idx === -1) {
+            map[e.type].push(e.text);
+            idx = map[e.type].length - 1;
+        }
+
+        result += `<${e.type}_${idx + 1}>`;
+        types[e.type] = (types[e.type] || 0) + 1;
+        lastEnd = e.end;
+    }
+
+    result += text.substring(lastEnd);
+    return { result, count: entities.length, types, entities };
+}
+
+// Форматирование с подсветкой
+function formatResult(text, entities) {
+    // Создаём карту категорий
+    const catMap = {};
+    for (const e of entities) {
+        const key = `${e.type}_`;
+        if (!catMap[e.type]) catMap[e.type] = e.category || 'id';
+    }
+
+    return text.replace(/<([A-Z_]+)_(\d+)>/g, (match, type, idx) => {
+        const cat = catMap[type] || 'id';
+        return `<span class="tag ${cat}">&lt;${type}_${idx}&gt;</span>`;
+    });
+}
+
+// Статистика
+function formatStats(types) {
+    const labels = {
+        PERSON: 'Имена', FULL_NAME: 'Полные имена', FIRST_NAME: 'Имена',
+        LAST_NAME: 'Фамилии', THERAPIST_NAME: 'Терапевты', NICKNAME: 'Прозвища',
+        FAMILY_MEMBER: 'Члены семьи', CHILD_NAME: 'Дети', AGE: 'Возраст',
+        DATE_OF_BIRTH: 'Даты рождения',
+        PHONE_NUMBER: 'Телефоны', EMAIL: 'Email', EMAIL_ADDRESS: 'Email',
+        ADDRESS: 'Адреса', CITY: 'Города', COUNTRY: 'Страны', LOCATION: 'Места',
+        ORGANIZATION: 'Организации', EMPLOYER: 'Работодатели',
+        SCHOOL: 'Школы', UNIVERSITY: 'Университеты',
+        PASSPORT_NUMBER: 'Паспорта', NATIONAL_ID_NUMBER: 'Документы',
+        CREDIT_CARD_NUMBER: 'Карты', BANK_ACCOUNT_NUMBER: 'Счета',
+        DATE: 'Даты'
+    };
+    const items = Object.entries(types).map(([k, v]) => `${labels[k] || k}: ${v}`);
+    const total = Object.values(types).reduce((a, b) => a + b, 0);
+    return `Найдено и заменено ${total} элементов (${items.join(', ')})`;
+}
+
+// Обработчик кнопки
+document.getElementById('anon-btn').onclick = async function() {
+    const input = document.getElementById('anon-input').value.trim();
+    const error = document.getElementById('anon-error');
+    const result = document.getElementById('anon-result');
+    const loading = document.getElementById('anon-loading');
+    const loadingText = document.getElementById('loading-text');
+    const progressBar = document.getElementById('progress-bar');
+    const btn = this;
+
+    error.classList.remove('visible');
+    result.classList.remove('visible');
+
+    if (!input) {
+        error.textContent = 'Пожалуйста, вставьте текст сессии';
+        error.classList.add('visible');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Анализируем...';
+    loading.classList.add('visible');
+    progressBar.style.width = '20%';
+
+    try {
+        let allEntities = [];
+
+        // GLiNER анализ
+        if (gliner) {
+            loadingText.textContent = 'GLiNER анализирует текст...';
+            progressBar.style.width = '40%';
+            const glinerEntities = await anonymizeWithGliner(input);
+            allEntities = [...allEntities, ...glinerEntities];
+        }
+
+        // Regex анализ (дополнительно)
+        loadingText.textContent = 'Поиск паттернов...';
+        progressBar.style.width = '70%';
+        const regexEntities = findEntitiesWithRegex(input);
+        allEntities = [...allEntities, ...regexEntities];
+
+        // Объединение
+        progressBar.style.width = '90%';
+        allEntities = mergeEntities(allEntities);
+
+        if (allEntities.length === 0) {
+            error.textContent = 'Персональные данные не найдены.';
+            error.classList.add('visible');
+            loading.classList.remove('visible');
+            btn.disabled = false;
+            btn.textContent = 'Анонимизировать';
+            return;
+        }
+
+        // Анонимизация
+        const { result: anonymized, types, entities } = anonymize(input, allEntities);
+
+        progressBar.style.width = '100%';
+
+        document.getElementById('anon-output').innerHTML = formatResult(anonymized, allEntities);
+        document.getElementById('anon-stats').textContent = formatStats(types);
+        result.classList.add('visible');
+
+    } catch (e) {
+        console.error('Error:', e);
+        error.textContent = 'Ошибка: ' + e.message;
+        error.classList.add('visible');
+    }
+
+    loading.classList.remove('visible');
+    btn.disabled = false;
+    btn.textContent = 'Анонимизировать';
+};
+
+// Копирование
+document.getElementById('anon-copy').onclick = function() {
+    const text = document.getElementById('anon-output').innerText;
+    navigator.clipboard.writeText(text).then(() => {
+        this.textContent = 'Скопировано!';
+        setTimeout(() => this.textContent = 'Копировать', 2000);
+    });
+};
+
+// Инициализация
+initGliner();
+</script>
